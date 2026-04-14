@@ -54,14 +54,17 @@ export const matchSchema: RxJsonSchema<Match> = {
           server_id:      { type: 'string' },
           winner_id:      { type: 'string' },
           shot_type:      { type: 'string', enum: ['Winner', 'UE', 'FE'] },
-          side:           { type: 'string', enum: ['FH', 'BH', 'Serve', 'Volley', 'OH'] },
-          location:       { type: 'string', enum: ['T', 'Wide', 'Body', 'Net', 'BL', 'BR', 'DTL', 'CC', 'ML', 'MR'] },
+          side:           { type: 'string', enum: ['FH', 'BH', 'Serve'] },
+          shot_category:  { type: 'string', enum: ['Regular','Return','Inside-In','Inside-Out','Passing','Approach','Slice','Volley','Drop Shot','Lob','Overhead','Ace','Double Fault'] },
+          location:       { type: 'string', enum: ['CC', 'ML', 'DTL', 'T', 'Wide', 'Body', 'Net'] },
+          serve_number:   { type: 'integer', enum: [1, 2] },
+          rally_length:   { type: 'integer', minimum: 1 },
           momentum_index: { type: 'number' },
           set_number:     { type: 'integer' },
           game_number:    { type: 'integer' },
           point_number:   { type: 'integer' }
         },
-        required: ['server_id', 'winner_id', 'shot_type', 'side', 'set_number', 'game_number', 'point_number']
+        required: ['server_id', 'winner_id', 'shot_type', 'side', 'shot_category', 'location', 'serve_number', 'rally_length', 'set_number', 'game_number', 'point_number']
       },
       default: []
     },

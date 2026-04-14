@@ -4,11 +4,11 @@
 
 /* ── Light theme (default) ─────────────────────────────────── */
 :root {
-  /* Brand colours */
-  --color-primary:        #1a6b3c;   /* Tennis green */
-  --color-primary-light:  #2d9158;
-  --color-primary-dark:   #114a2a;
-  --color-accent:         #f0b429;   /* Court yellow */
+  /* Brand colours — iOS blue theme */
+  --color-primary:        #007AFF;   /* iOS system blue */
+  --color-primary-light:  #3395FF;
+  --color-primary-dark:   #0055CC;
+  --color-accent:         #f0b429;   /* Court yellow (server ball) */
   --color-accent-dark:    #c88f00;
 
   /* Surfaces */
@@ -25,9 +25,9 @@
   --color-text-inverse:   #ffffff;
 
   /* Status */
-  --color-win:            #1a6b3c;
+  --color-win:            #007AFF;
   --color-loss:           #c0392b;
-  --color-tie:            #7a9a7a;
+  --color-tie:            #8e8e93;
 
   /* Spacing scale */
   --space-1:  4px;
@@ -70,8 +70,8 @@
   --tab-bar-height:   56px;
   --tab-bar-bg:       #ffffff;
   --tab-bar-border:   #e0e6e0;
-  --tab-active-color: #1a6b3c;
-  --tab-idle-color:   #7a9a7a;
+  --tab-active-color: #007AFF;
+  --tab-idle-color:   #8e8e93;
 
   /* Safe area insets (overridden by env() on iOS) */
   --safe-top:    env(safe-area-inset-top,    0px);
@@ -82,9 +82,9 @@
 
 /* ── Dark theme ─────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --color-primary:        #2d9158;
-  --color-primary-light:  #3daa6a;
-  --color-primary-dark:   #1a6b3c;
+  --color-primary:        #0A84FF;   /* iOS blue dark mode */
+  --color-primary-light:  #3395FF;
+  --color-primary-dark:   #007AFF;
   --color-accent:         #f0b429;
 
   --color-bg:             #0f1a0f;
@@ -100,8 +100,8 @@
 
   --tab-bar-bg:     #1a2b1a;
   --tab-bar-border: #2d4a2d;
-  --tab-active-color: #2d9158;
-  --tab-idle-color:   #5a8a5a;
+  --tab-active-color: #0A84FF;
+  --tab-idle-color:   #636366;
 }
 
 /* ── Reset & Base ───────────────────────────────────────────── */

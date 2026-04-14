@@ -20,6 +20,11 @@ CREATE TABLE public.players (
   _deleted       BOOLEAN      NOT NULL DEFAULT FALSE
 );
 
+-- ── points_log JSONB entry shape (v2 — updated schema):
+-- { server_id, winner_id, shot_type(Winner|UE|FE), side(FH|BH|Serve),
+--   shot_category(Regular|Return|...|Ace|Double Fault), location(CC|ML|DTL|T|Wide|Body|Net),
+--   serve_number(1|2), rally_length(int), momentum_index, set_number, game_number, point_number }
+
 -- ── Table: matches ───────────────────────────────────────────
 CREATE TABLE public.matches (
   id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
