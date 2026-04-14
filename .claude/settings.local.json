@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ng new:*)",
+      "Bash(ng --version)",
+      "Bash(mv README.md README.md.bak)",
+      "Bash(mv README.md.bak README.md)",
+      "Bash(npm install:*)",
+      "Bash(npx cap:*)",
+      "Bash(node -e ':*)"
+    ]
+  }
+}
