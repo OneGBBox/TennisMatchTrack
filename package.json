@@ -21,8 +21,14 @@
     "@capacitor/core": "^8.3.0",
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/ios": "^8.3.0",
+    "@supabase/supabase-js": "^2.103.0",
+    "chart.js": "^4.5.1",
+    "dexie": "^4.4.2",
+    "rxdb": "^17.1.0",
+    "rxdb-supabase": "^1.0.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "uuid": "^13.0.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
