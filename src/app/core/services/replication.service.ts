@@ -14,7 +14,14 @@ export class ReplicationService implements OnDestroy {
 
   private supabase: SupabaseClient = createClient(
     environment.supabaseUrl,
-    environment.supabaseAnonKey
+    environment.supabaseAnonKey,
+    {
+      auth: {
+        // Bypass the Navigator Locks API — avoids NavigatorLockAcquireTimeoutError
+        // in browsers / contexts where acquiring an exclusive lock times out.
+        lock: <R>(_name: string, _timeout: number, fn: () => Promise<R>): Promise<R> => fn()
+      }
+    }
   );
 
   private playerReplication: RxReplicationState<Player, any> | null = null;
@@ -67,13 +74,25 @@ export class ReplicationService implements OnDestroy {
       retryTime: 5000
     });
 
-    playerRepl.error$.subscribe((err: unknown) => {
-      console.error('[ReplicationService] players error:', err);
+    // Log replication errors without letting them surface as uncaught rejections.
+    // rxdb-supabase's initial pull can reject with undefined[0] if Supabase returns
+    // null data (e.g. when credentials are invalid / server unreachable).
+    playerRepl.error$.subscribe({
+      next: (err: unknown) => console.warn('[ReplicationService] players error:', err),
+      error: (err: unknown) => console.warn('[ReplicationService] players stream error:', err)
+    });
+    matchRepl.error$.subscribe({
+      next: (err: unknown) => console.warn('[ReplicationService] matches error:', err),
+      error: (err: unknown) => console.warn('[ReplicationService] matches stream error:', err)
     });
 
-    matchRepl.error$.subscribe((err: unknown) => {
-      console.error('[ReplicationService] matches error:', err);
-    });
+    // Swallow any synchronous/first-tick promise rejection from the replication setup
+    Promise.resolve(playerRepl).catch((err: unknown) =>
+      console.warn('[ReplicationService] playerRepl init error:', err)
+    );
+    Promise.resolve(matchRepl).catch((err: unknown) =>
+      console.warn('[ReplicationService] matchRepl init error:', err)
+    );
 
     this.playerReplication = playerRepl;
     this.matchReplication = matchRepl;

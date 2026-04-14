@@ -5,4 +5,7 @@
 //   1: (oldDoc: any) => { oldDoc.newField = 'defaultValue'; return oldDoc; }
 // };
 
-export const matchMigrationStrategies: Record<number, (doc: any) => any> = {};
+export const matchMigrationStrategies: Record<number, (doc: any) => any> = {
+  // v0 → v1: removed creator_id from indexes (schema-only change, no data transform needed)
+  1: (oldDoc: any) => oldDoc
+};

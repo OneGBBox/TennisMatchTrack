@@ -28,28 +28,64 @@ export type TennisCollections = {
 
 export type TennisDatabase = RxDatabase<TennisCollections>;
 
-// RxDB plugins are registered once at module level
+// RxDB plugins — safe to call multiple times (idempotent)
 addRxPlugin(RxDBQueryBuilderPlugin);
 addRxPlugin(RxDBMigrationSchemaPlugin);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Window-level singleton
+//
+// Storing the DB promise on `window` means:
+//  • It is shared across all Angular module instances in the same browser tab
+//  • Vite HMR module reloads don't lose the reference (window persists)
+//  • A real page reload clears window, so the DB is created fresh each time
+//
+// This prevents DB8 ("database name already in use") that RxDB throws when
+// createRxDatabase is called twice in the same JS session (e.g. from a race
+// between ReplicationService.init() and MatchListComponent.ngOnInit(), or
+// after a Vite HMR-triggered service re-instantiation).
+// ─────────────────────────────────────────────────────────────────────────────
+declare global {
+  interface Window {
+    __tennisDbPromise?: Promise<TennisDatabase>;
+  }
+}
+
+function getWindowDbPromise(): Promise<TennisDatabase> | undefined {
+  return typeof window !== 'undefined' ? window.__tennisDbPromise : undefined;
+}
+function setWindowDbPromise(p: Promise<TennisDatabase>): void {
+  if (typeof window !== 'undefined') window.__tennisDbPromise = p;
+}
+function clearWindowDbPromise(): void {
+  if (typeof window !== 'undefined') delete window.__tennisDbPromise;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DatabaseService {
-  private dbInstance: TennisDatabase | null = null;
-  private initPromise: Promise<TennisDatabase> | null = null;
 
   async getDb(): Promise<TennisDatabase> {
-    if (this.dbInstance) return this.dbInstance;
-    if (this.initPromise) return this.initPromise;
-    this.initPromise = this.initDatabase();
-    this.dbInstance = await this.initPromise;
-    return this.dbInstance;
+    const existing = getWindowDbPromise();
+    if (existing) return existing;
+
+    const promise = this.initDatabase().catch(err => {
+      clearWindowDbPromise(); // allow retry on next call
+      throw err;
+    });
+
+    setWindowDbPromise(promise);
+    return promise;
   }
 
   private async initDatabase(): Promise<TennisDatabase> {
     const db = await createRxDatabase<TennisDatabase>({
       name: 'tennismatchtrack',
       storage: getRxStorageDexie(),
-      ignoreDuplicate: true
+      // closeDuplicates:true closes any stale in-memory RxDB instance left from
+      // a previous HMR cycle before creating a fresh one.
+      // NOTE: do NOT set ignoreDuplicate:true — in RxDB 17 that flag throws DB9
+      // unless the RxDBDevModePlugin is loaded (isDevMode() must return true).
+      closeDuplicates: true
     });
 
     await db.addCollections({

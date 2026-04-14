@@ -1,7 +1,7 @@
 import { RxJsonSchema } from 'rxdb';
 import { Match } from '../../core/models/match.model';
 
-export const MATCH_SCHEMA_VERSION = 0;
+export const MATCH_SCHEMA_VERSION = 1;
 
 export const matchSchema: RxJsonSchema<Match> = {
   version: MATCH_SCHEMA_VERSION,
@@ -96,5 +96,7 @@ export const matchSchema: RxJsonSchema<Match> = {
     }
   },
   required: ['id', 'date', 'player1_id', 'player2_id', 'scoring_rules', 'status', '_modified', '_deleted'],
-  indexes: ['_modified', 'date', 'status', 'creator_id']
+  // creator_id intentionally excluded from indexes — it is optional (not in required)
+  // and Dexie throws DXE1 when indexing optional fields without a default value.
+  indexes: ['_modified', 'date', 'status']
 };
