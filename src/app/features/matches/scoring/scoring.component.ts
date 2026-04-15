@@ -18,7 +18,7 @@ import { PointModalComponent } from './point-modal.component';
   template: `
     <div class="page scoring-page">
 
-      <!-- ── Top bar ────────────────────────────────────────────── -->
+      <!-- ── Top bar ───────────────────────────────────────────── -->
       <header class="score-header">
         <button class="header-btn" (click)="back()" aria-label="Back">
           <svg width="10" height="18" viewBox="0 0 10 18" fill="none" stroke="currentColor"
@@ -28,8 +28,11 @@ import { PointModalComponent } from './point-modal.component';
         </button>
 
         <div class="header-center">
-          @if (scoring.matchStatus() === 'in_progress') {
+          @if (!scoring.isMatchComplete() && scoring.matchStatus() === 'in_progress') {
             <span class="live-chip">LIVE</span>
+          }
+          @if (isSimpleMode()) {
+            <span class="mode-chip">SIMPLE</span>
           }
           @if (locationCity()) {
             <span class="header-location">{{ locationCity() }}</span>
@@ -37,23 +40,16 @@ import { PointModalComponent } from './point-modal.component';
         </div>
 
         <div class="header-actions">
-          <button
-            class="header-btn"
-            [disabled]="!scoring.canUndo()"
-            (click)="undo()"
-            aria-label="Undo"
-          >↩</button>
-          <button
-            class="header-btn"
-            [disabled]="!scoring.canRedo()"
-            (click)="redo()"
-            aria-label="Redo"
-          >↪</button>
+          @if (!scoring.isMatchComplete()) {
+            <button class="header-btn" [disabled]="!scoring.canUndo()" (click)="undo()" aria-label="Undo">↩</button>
+            <button class="header-btn" [disabled]="!scoring.canRedo()" (click)="redo()" aria-label="Redo">↪</button>
+          }
         </div>
       </header>
 
       @if (matchLoaded()) {
-        <!-- ── Set scores bar ────────────────────────────────────── -->
+
+        <!-- ── Set scores bar ─────────────────────────────────── -->
         <div class="sets-bar">
           @for (set of scoring.setScores(); track $index) {
             <div class="set-chip" [class.current]="isCurrentSet($index)">
@@ -64,84 +60,83 @@ import { PointModalComponent } from './point-modal.component';
           }
         </div>
 
-        <!-- ── Main score area ────────────────────────────────────── -->
-        <div class="score-arena">
+        <!-- ════════════════════════════════════════════════════
+             MATCH IN PROGRESS — interactive scoring arena
+             ════════════════════════════════════════════════════ -->
+        @if (!isLocked()) {
 
-          <!-- Player 1 side -->
-          <div
-            class="player-side p1-side"
-            [class.serving]="scoring.currentServer() === p1Id()"
-            (click)="!scoring.isMatchComplete() && openModal(p1Id())"
-            role="button"
-            [attr.aria-label]="'Award point to ' + p1Name()"
-          >
-            <!-- Server ball -->
-            <div class="server-ball" [class.visible]="scoring.currentServer() === p1Id()">🎾</div>
+          <div class="score-arena">
 
-            <!-- Avatar + name -->
-            <div class="player-info">
-              <app-avatar [name]="p1Name()" [size]="52" />
-              <span class="player-name-label">{{ p1Name() }}</span>
-            </div>
+            <!-- Player 1 side -->
+            <div
+              class="player-side p1-side"
+              [class.serving]="scoring.currentServer() === p1Id()"
+              (click)="onSideTap(p1Id())"
+              role="button"
+              [attr.aria-label]="'Award point to ' + p1Name()"
+            >
+              <div class="server-ball" [class.visible]="scoring.currentServer() === p1Id()">🎾</div>
 
-            <!-- Game score -->
-            <div class="game-score" [class.ad]="scoring.displayScore().p1 === 'Ad'">
-              {{ scoring.displayScore().p1 }}
-            </div>
-
-            <!-- Sets won -->
-            <div class="sets-won-row">
-              @for (i of setsWonArr(scoring.setsWon().p1); track i) {
-                <span class="set-dot"></span>
-              }
-            </div>
-          </div>
-
-          <!-- Divider -->
-          <div class="score-divider">
-            <div class="game-label">
-              @if (scoring.displayScore().label) {
-                {{ scoring.displayScore().label }}
-              } @else {
-                {{ setProgressLabel() }}
-              }
-            </div>
-            @if (scoring.isTiebreak() || scoring.isSuperTiebreak()) {
-              <div class="tb-label">
-                {{ scoring.isSuperTiebreak() ? 'Super Tiebreak' : 'Tiebreak' }}
+              <div class="player-info">
+                <app-avatar [name]="p1Name()" [size]="52" />
+                <span class="player-name-label">{{ p1Name() }}</span>
               </div>
-            }
-          </div>
 
-          <!-- Player 2 side -->
-          <div
-            class="player-side p2-side"
-            [class.serving]="scoring.currentServer() === p2Id()"
-            (click)="!scoring.isMatchComplete() && openModal(p2Id())"
-            role="button"
-            [attr.aria-label]="'Award point to ' + p2Name()"
-          >
-            <div class="server-ball" [class.visible]="scoring.currentServer() === p2Id()">🎾</div>
+              <div class="game-score" [class.ad]="scoring.displayScore().p1 === 'Ad'">
+                {{ scoring.displayScore().p1 }}
+              </div>
 
-            <div class="player-info">
-              <app-avatar [name]="p2Name()" [size]="52" />
-              <span class="player-name-label">{{ p2Name() }}</span>
+              <div class="sets-won-row">
+                @for (i of setsWonArr(scoring.setsWon().p1); track i) {
+                  <span class="set-dot"></span>
+                }
+              </div>
             </div>
 
-            <div class="game-score" [class.ad]="scoring.displayScore().p2 === 'Ad'">
-              {{ scoring.displayScore().p2 }}
-            </div>
-
-            <div class="sets-won-row">
-              @for (i of setsWonArr(scoring.setsWon().p2); track i) {
-                <span class="set-dot"></span>
+            <!-- Divider -->
+            <div class="score-divider">
+              <div class="game-label">
+                @if (scoring.displayScore().label) {
+                  {{ scoring.displayScore().label }}
+                } @else {
+                  {{ setProgressLabel() }}
+                }
+              </div>
+              @if (scoring.isTiebreak() || scoring.isSuperTiebreak()) {
+                <div class="tb-label">
+                  {{ scoring.isSuperTiebreak() ? 'Super TB' : 'Tiebreak' }}
+                </div>
               }
             </div>
-          </div>
-        </div>
 
-        <!-- ── Serve toggle ──────────────────────────────────────── -->
-        @if (!scoring.isMatchComplete()) {
+            <!-- Player 2 side -->
+            <div
+              class="player-side p2-side"
+              [class.serving]="scoring.currentServer() === p2Id()"
+              (click)="onSideTap(p2Id())"
+              role="button"
+              [attr.aria-label]="'Award point to ' + p2Name()"
+            >
+              <div class="server-ball" [class.visible]="scoring.currentServer() === p2Id()">🎾</div>
+
+              <div class="player-info">
+                <app-avatar [name]="p2Name()" [size]="52" />
+                <span class="player-name-label">{{ p2Name() }}</span>
+              </div>
+
+              <div class="game-score" [class.ad]="scoring.displayScore().p2 === 'Ad'">
+                {{ scoring.displayScore().p2 }}
+              </div>
+
+              <div class="sets-won-row">
+                @for (i of setsWonArr(scoring.setsWon().p2); track i) {
+                  <span class="set-dot"></span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Serve toggle -->
           <div class="serve-row">
             <span class="serve-row-label">Serve</span>
             <div class="serve-toggle">
@@ -149,30 +144,83 @@ import { PointModalComponent } from './point-modal.component';
               <button [class.on]="serveNumber() === 2" (click)="serveNumber.set(2)">2nd</button>
             </div>
           </div>
+
+          <!-- Tap hint -->
+          @if (scoring.pointsLog().length === 0) {
+            <p class="tap-hint">
+              @if (isSimpleMode()) {
+                Tap a player to award a point
+              } @else {
+                Tap a player's side to log a point with details
+              }
+            </p>
+          }
+
+          <!-- Bottom bar -->
+          <div class="bottom-bar">
+            <button class="end-btn" (click)="endMatch()">End Match</button>
+          </div>
+
         }
 
-        <!-- ── Match complete banner ────────────────────────────── -->
-        @if (scoring.isMatchComplete()) {
-          <div class="complete-banner">
-            <span class="banner-icon">🏆</span>
-            <span class="banner-text">{{ winnerName() }} wins!</span>
-            <button class="banner-stats" (click)="viewStats()">View Stats</button>
+        <!-- ════════════════════════════════════════════════════
+             MATCH COMPLETE — locked result view, no score numbers
+             ════════════════════════════════════════════════════ -->
+        @if (isLocked()) {
+          <div class="result-screen">
+
+            <!-- Trophy / ended icon -->
+            <div class="result-trophy">
+              {{ scoring.isMatchComplete() ? '🏆' : '🎾' }}
+            </div>
+            <h2 class="result-winner">
+              {{ scoring.isMatchComplete() ? winnerName() + ' wins!' : 'Match Ended' }}
+            </h2>
+
+            <!-- Final set scores -->
+            <div class="result-sets">
+              @for (set of scoring.setScores(); track $index) {
+                <div class="result-set-chip">
+                  <span [class.result-winner-score]="set.winner === p1Id()">{{ set.p1 }}</span>
+                  <span class="result-set-sep">–</span>
+                  <span [class.result-winner-score]="set.winner === p2Id()">{{ set.p2 }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Player cards (static, no interaction) -->
+            <div class="result-players">
+              <div class="result-player"
+                   [class.result-player-won]="scoring.isMatchComplete() && scoring.winner() === p1Id()">
+                <app-avatar [name]="p1Name()" [size]="56" />
+                <span class="result-player-name">{{ p1Name() }}</span>
+                @if (scoring.isMatchComplete() && scoring.winner() === p1Id()) {
+                  <span class="result-crown">👑</span>
+                }
+              </div>
+              <span class="result-vs">vs</span>
+              <div class="result-player"
+                   [class.result-player-won]="scoring.isMatchComplete() && scoring.winner() === p2Id()">
+                <app-avatar [name]="p2Name()" [size]="56" />
+                <span class="result-player-name">{{ p2Name() }}</span>
+                @if (scoring.isMatchComplete() && scoring.winner() === p2Id()) {
+                  <span class="result-crown">👑</span>
+                }
+              </div>
+            </div>
+
+            <!-- Stats button -->
+            <button class="stats-btn" (click)="viewStats()">
+              View Match Stats
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+
+            <button class="back-matches-btn" (click)="back()">Back to Matches</button>
           </div>
         }
-
-        <!-- ── Tap hint ──────────────────────────────────────────── -->
-        @if (!scoring.isMatchComplete() && scoring.pointsLog().length === 0) {
-          <p class="tap-hint">Tap a player's side to award a point</p>
-        }
-
-        <!-- ── Bottom action bar ─────────────────────────────────── -->
-        <div class="bottom-bar">
-          @if (!scoring.isMatchComplete()) {
-            <button class="end-btn" (click)="endMatch()">End Match</button>
-          } @else {
-            <button class="end-btn primary" (click)="viewStats()">View Stats</button>
-          }
-        </div>
 
       } @else {
         <!-- Loading -->
@@ -182,7 +230,7 @@ import { PointModalComponent } from './point-modal.component';
         </div>
       }
 
-      <!-- ── Point modal (portal) ──────────────────────────────── -->
+      <!-- ── Point modal (detail mode only) ───────────────────── -->
       @if (showModal()) {
         <app-point-modal
           [winnerId]="modalWinnerId()"
@@ -198,10 +246,11 @@ import { PointModalComponent } from './point-modal.component';
   styles: [`
     /* ── Page ─────────────────────────────────────────────────── */
     .scoring-page {
-      background: #0a0f1e;  /* dark court blue */
+      background: #0a0f1e;
       color: #fff;
       display: flex;
       flex-direction: column;
+      min-height: 100%;
     }
 
     /* ── Header ───────────────────────────────────────────────── */
@@ -216,10 +265,7 @@ import { PointModalComponent } from './point-modal.component';
       align-items: center;
       gap: var(--space-2);
     }
-    .header-actions {
-      display: flex;
-      gap: var(--space-2);
-    }
+    .header-actions { display: flex; gap: var(--space-2); }
     .header-btn {
       width: 36px; height: 36px;
       border-radius: 50%;
@@ -234,18 +280,20 @@ import { PointModalComponent } from './point-modal.component';
     .live-chip {
       background: #FF3B30;
       color: #fff;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
+      font-size: 9px; font-weight: 800; letter-spacing: 0.8px;
       padding: 2px 7px;
       border-radius: var(--radius-full);
       animation: pulse 1.5s infinite;
     }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
-    .header-location {
-      font-size: var(--font-size-sm);
-      color: rgba(255,255,255,0.6);
+    .mode-chip {
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      font-size: 9px; font-weight: 700; letter-spacing: 0.6px;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
     }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+    .header-location { font-size: var(--font-size-sm); color: rgba(255,255,255,0.6); }
 
     /* ── Sets bar ─────────────────────────────────────────────── */
     .sets-bar {
@@ -265,14 +313,8 @@ import { PointModalComponent } from './point-modal.component';
       font-weight: var(--font-weight-medium);
       color: rgba(255,255,255,0.65);
     }
-    .set-chip.current {
-      background: rgba(0,122,255,0.25);
-      color: #fff;
-    }
-    .set-chip .winner {
-      color: #fff;
-      font-weight: var(--font-weight-bold);
-    }
+    .set-chip.current { background: rgba(0,122,255,0.25); color: #fff; }
+    .set-chip .winner { color: #fff; font-weight: var(--font-weight-bold); }
     .set-sep { opacity: 0.4; }
 
     /* ── Score arena ──────────────────────────────────────────── */
@@ -304,30 +346,23 @@ import { PointModalComponent } from './point-modal.component';
       min-height: 280px;
     }
     .player-side:active {
-      background: rgba(255,255,255,0.12);
-      transform: scale(0.98);
+      background: rgba(255,255,255,0.14);
+      transform: scale(0.97);
     }
     .player-side.serving {
       background: rgba(0,122,255,0.15);
       box-shadow: inset 0 0 0 2px rgba(0,122,255,0.4);
     }
 
-    /* Server ball indicator */
     .server-ball {
-      position: absolute;
-      top: var(--space-3);
-      font-size: 18px;
-      opacity: 0;
-      transition: opacity 0.2s;
+      position: absolute; top: var(--space-3);
+      font-size: 18px; opacity: 0; transition: opacity 0.2s;
     }
     .server-ball.visible { opacity: 1; }
 
-    /* Avatar + name */
     .player-info {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--space-2);
+      display: flex; flex-direction: column;
+      align-items: center; gap: var(--space-2);
     }
     .player-name-label {
       font-size: var(--font-size-sm);
@@ -336,7 +371,6 @@ import { PointModalComponent } from './point-modal.component';
       text-align: center;
     }
 
-    /* Big score number */
     .game-score {
       font-size: 72px;
       font-weight: 800;
@@ -344,17 +378,9 @@ import { PointModalComponent } from './point-modal.component';
       color: #fff;
       letter-spacing: -2px;
     }
-    .game-score.ad {
-      font-size: 48px;
-      color: var(--color-accent);
-    }
+    .game-score.ad { font-size: 48px; color: var(--color-accent); }
 
-    /* Sets won dots */
-    .sets-won-row {
-      display: flex;
-      gap: 6px;
-      min-height: 10px;
-    }
+    .sets-won-row { display: flex; gap: 6px; min-height: 10px; }
     .set-dot {
       width: 8px; height: 8px;
       border-radius: 50%;
@@ -363,48 +389,32 @@ import { PointModalComponent } from './point-modal.component';
 
     /* ── Centre divider ───────────────────────────────────────── */
     .score-divider {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      width: 60px;
-      flex-shrink: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px; width: 60px; flex-shrink: 0;
     }
     .game-label {
-      font-size: 11px;
-      color: rgba(255,255,255,0.5);
-      text-align: center;
-      line-height: 1.3;
+      font-size: 11px; color: rgba(255,255,255,0.5);
+      text-align: center; line-height: 1.3;
     }
     .tb-label {
-      font-size: 9px;
-      background: var(--color-accent);
-      color: #000;
-      border-radius: var(--radius-full);
-      padding: 2px 6px;
-      font-weight: var(--font-weight-bold);
-      text-align: center;
+      font-size: 9px; background: var(--color-accent);
+      color: #000; border-radius: var(--radius-full);
+      padding: 2px 6px; font-weight: var(--font-weight-bold); text-align: center;
     }
 
     /* ── Serve toggle ─────────────────────────────────────────── */
     .serve-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-3);
+      display: flex; align-items: center;
+      justify-content: center; gap: var(--space-3);
       padding: var(--space-3) var(--space-4);
     }
-    .serve-row-label {
-      font-size: var(--font-size-sm);
-      color: rgba(255,255,255,0.5);
-    }
+    .serve-row-label { font-size: var(--font-size-sm); color: rgba(255,255,255,0.5); }
     .serve-toggle {
       display: flex;
       background: rgba(255,255,255,0.08);
       border-radius: var(--radius-full);
-      padding: 2px;
-      gap: 2px;
+      padding: 2px; gap: 2px;
     }
     .serve-toggle button {
       padding: var(--space-2) var(--space-4);
@@ -414,43 +424,14 @@ import { PointModalComponent } from './point-modal.component';
       color: rgba(255,255,255,0.55);
       transition: background 0.15s, color 0.15s;
     }
-    .serve-toggle button.on {
-      background: var(--color-primary);
-      color: #fff;
-    }
-
-    /* ── Complete banner ──────────────────────────────────────── */
-    .complete-banner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-3);
-      background: linear-gradient(135deg, #f0b429, #c88f00);
-      padding: var(--space-4);
-      margin: 0 var(--space-4);
-      border-radius: var(--radius-lg);
-    }
-    .banner-icon { font-size: 28px; }
-    .banner-text {
-      font-size: var(--font-size-md);
-      font-weight: var(--font-weight-bold);
-      color: #000;
-    }
-    .banner-stats {
-      background: rgba(0,0,0,0.25);
-      color: #000;
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-bold);
-      padding: var(--space-2) var(--space-4);
-      border-radius: var(--radius-full);
-    }
+    .serve-toggle button.on { background: var(--color-primary); color: #fff; }
 
     /* ── Tap hint ─────────────────────────────────────────────── */
     .tap-hint {
       text-align: center;
       color: rgba(255,255,255,0.35);
       font-size: var(--font-size-sm);
-      padding: var(--space-3) var(--space-4);
+      padding: var(--space-2) var(--space-4);
     }
 
     /* ── Bottom bar ───────────────────────────────────────────── */
@@ -459,8 +440,7 @@ import { PointModalComponent } from './point-modal.component';
       padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + var(--space-3));
     }
     .end-btn {
-      width: 100%;
-      height: 48px;
+      width: 100%; height: 48px;
       border-radius: var(--radius-full);
       background: rgba(255,255,255,0.08);
       color: rgba(255,255,255,0.65);
@@ -468,21 +448,120 @@ import { PointModalComponent } from './point-modal.component';
       font-weight: var(--font-weight-medium);
       transition: background 0.15s;
     }
-    .end-btn.primary {
-      background: var(--color-primary);
-      color: #fff;
-    }
     .end-btn:active { background: rgba(255,255,255,0.15); }
 
-    /* ── Loading ──────────────────────────────────────────────── */
-    .loading-state {
+    /* ── Match complete result screen ─────────────────────────── */
+    .result-screen {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: var(--space-4);
-      color: rgba(255,255,255,0.6);
+      gap: var(--space-5);
+      padding: var(--space-8) var(--space-6);
+      padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + var(--space-8));
+      text-align: center;
+    }
+
+    .result-trophy { font-size: 64px; line-height: 1; }
+
+    .result-winner {
+      font-size: var(--font-size-2xl);
+      font-weight: 800;
+      color: var(--color-accent);
+      letter-spacing: -0.5px;
+    }
+
+    /* Final set score chips */
+    .result-sets {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: center;
+    }
+    .result-set-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-5);
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      color: rgba(255,255,255,0.55);
+    }
+    .result-winner-score {
+      color: #fff;
+      font-weight: 800;
+    }
+    .result-set-sep { opacity: 0.35; font-size: var(--font-size-lg); }
+
+    /* Player result cards */
+    .result-players {
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+      justify-content: center;
+    }
+    .result-player {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      opacity: 0.55;
+      position: relative;
+    }
+    .result-player.result-player-won { opacity: 1; }
+    .result-player-name {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: rgba(255,255,255,0.8);
+    }
+    .result-crown {
+      position: absolute;
+      top: -18px;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .result-vs {
+      font-size: var(--font-size-sm);
+      color: rgba(255,255,255,0.35);
+      font-weight: var(--font-weight-bold);
+    }
+
+    /* Stats button */
+    .stats-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      width: 100%;
+      max-width: 300px;
+      height: 52px;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-bold);
+      border-radius: var(--radius-full);
+      box-shadow: 0 4px 16px rgba(0,122,255,0.4);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .stats-btn:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(0,122,255,0.3);
+    }
+
+    .back-matches-btn {
+      color: rgba(255,255,255,0.45);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      padding: var(--space-3);
+    }
+
+    /* ── Loading ──────────────────────────────────────────────── */
+    .loading-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: var(--space-4); color: rgba(255,255,255,0.6);
     }
     .spinner {
       width: 36px; height: 36px;
@@ -500,7 +579,7 @@ export class ScoringComponent implements OnInit, OnDestroy {
   private router  = inject(Router);
   readonly scoring = inject(TennisScoringService);
 
-  // ── Local state ───────────────────────────────────────────────────────────
+  // ── State ─────────────────────────────────────────────────────────────────
   matchLoaded   = signal(false);
   matchId       = signal('');
   p1Id          = signal('');
@@ -509,12 +588,22 @@ export class ScoringComponent implements OnInit, OnDestroy {
   p2Name        = signal('Player 2');
   locationCity  = signal<string | null>(null);
   serveNumber   = signal<1 | 2>(1);
+  isSimpleMode  = signal(false);
+  matchDbStatus = signal<string>('in_progress');
 
   showModal       = signal(false);
   modalWinnerId   = signal('');
   modalWinnerName = signal('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
+
+  /** True when no more scoring is allowed — match finished OR manually ended. */
+  isLocked = computed(() =>
+    this.scoring.isMatchComplete() ||
+    this.matchDbStatus() === 'complete' ||
+    this.matchDbStatus() === 'abandoned'
+  );
+
   winnerName = computed(() => {
     const w = this.scoring.winner();
     if (!w) return '';
@@ -523,8 +612,7 @@ export class ScoringComponent implements OnInit, OnDestroy {
 
   setProgressLabel = computed(() => {
     const snap = this.scoring.snapshot();
-    const setIdx = snap.currentSetIdx + 1;
-    return `Set ${setIdx}`;
+    return `Set ${snap.currentSetIdx + 1}`;
   });
 
   setsWonArr(n: number): number[] {
@@ -536,7 +624,7 @@ export class ScoringComponent implements OnInit, OnDestroy {
     return !snap.isMatchComplete && idx === snap.setScores.length - 1;
   }
 
-  // ── Subscription ref for cleanup ─────────────────────────────────────────
+  // ── Subscription ref ──────────────────────────────────────────────────────
   private matchSub?: Subscription;
 
   // ── Persistence effect ────────────────────────────────────────────────────
@@ -546,27 +634,19 @@ export class ScoringComponent implements OnInit, OnDestroy {
     const id     = this.matchId();
     if (!id || !this.matchLoaded()) return;
 
-    // Persist asynchronously — errors are logged but do not crash the UI
     this.db.getDb()
       .then(db => db.matches.findOne(id).exec())
       .then(doc => {
-        if (!doc) {
-          console.warn('[Scoring] Cannot persist — match doc not found for id:', id);
-          return;
-        }
-        return doc.patch({
-          points_log: log,
-          status,
-          _modified: new Date().toISOString()
-        });
+        if (!doc) { console.warn('[Scoring] Cannot persist — match not found:', id); return; }
+        return doc.patch({ points_log: log, status, _modified: new Date().toISOString() });
       })
       .catch(err => console.error('[Scoring] Persist failed:', err));
   });
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   async ngOnInit(): Promise<void> {
-    const id             = this.route.snapshot.paramMap.get('id') ?? '';
-    const initialServer  = this.route.snapshot.queryParamMap.get('server') ?? '';
+    const id            = this.route.snapshot.paramMap.get('id') ?? '';
+    const initialServer = this.route.snapshot.queryParamMap.get('server') ?? '';
     this.matchId.set(id);
 
     const db = await this.db.getDb();
@@ -575,7 +655,6 @@ export class ScoringComponent implements OnInit, OnDestroy {
       .subscribe(async match => {
         if (!match) return;
 
-        // Load players
         const [p1doc, p2doc] = await Promise.all([
           db.players.findOne(match.player1_id).exec(),
           db.players.findOne(match.player2_id).exec()
@@ -588,8 +667,9 @@ export class ScoringComponent implements OnInit, OnDestroy {
         this.p1Name.set(p1?.name ?? 'Player 1');
         this.p2Name.set(p2?.name ?? 'Player 2');
         this.locationCity.set(match.location_city ?? null);
+        this.isSimpleMode.set(match.scoring_rules?.simple_scoring ?? false);
+        this.matchDbStatus.set(match.status);
 
-        // Only initialise scoring service once
         if (!this.matchLoaded()) {
           const server = initialServer || match.player1_id;
           this.scoring.startMatch(
@@ -610,26 +690,49 @@ export class ScoringComponent implements OnInit, OnDestroy {
     this.scoring.resetMatch();
   }
 
-  // ── Modal ──────────────────────────────────────────────────────────────────
+  // ── Tap handler — routes to simple or detail mode ─────────────────────────
+  onSideTap(winnerId: string): void {
+    if (this.isLocked()) return;
+
+    if (this.isSimpleMode()) {
+      this.recordSimplePoint(winnerId);
+    } else {
+      this.openModal(winnerId);
+    }
+  }
+
+  // ── Simple mode: record point with sensible defaults ─────────────────────
+  private recordSimplePoint(winnerId: string): void {
+    this.scoring.recordPoint({
+      server_id:     this.scoring.currentServer(),
+      winner_id:     winnerId,
+      shot_type:     'Winner',
+      side:          'FH',
+      shot_category: 'Regular',
+      location:      'CC',
+      serve_number:  this.serveNumber(),
+      rally_length:  1
+    });
+    this.serveNumber.set(1);
+  }
+
+  // ── Detail modal ──────────────────────────────────────────────────────────
   openModal(winnerId: string): void {
-    if (this.scoring.isMatchComplete()) return;
+    if (this.isLocked()) return;
     this.modalWinnerId.set(winnerId);
     this.modalWinnerName.set(winnerId === this.p1Id() ? this.p1Name() : this.p2Name());
     this.showModal.set(true);
   }
 
-  closeModal(): void {
-    this.showModal.set(false);
-  }
+  closeModal(): void { this.showModal.set(false); }
 
   onPointRecorded(input: RecordPointInput): void {
     this.scoring.recordPoint({ ...input, serve_number: this.serveNumber() });
     this.closeModal();
-    // Reset serve number to 1 after point
     this.serveNumber.set(1);
   }
 
-  // ── Actions ────────────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────
   undo(): void { this.scoring.undo(); }
   redo(): void { this.scoring.redo(); }
 
@@ -638,16 +741,14 @@ export class ScoringComponent implements OnInit, OnDestroy {
   }
 
   async endMatch(): Promise<void> {
-    const id = this.matchId();
-    const db = await this.db.getDb();
+    const id  = this.matchId();
+    const db  = await this.db.getDb();
     const doc = await db.matches.findOne(id).exec();
     if (doc) {
-      await doc.patch({
-        status: 'abandoned',
-        _modified: new Date().toISOString()
-      });
+      await doc.patch({ status: 'abandoned', _modified: new Date().toISOString() });
     }
-    this.router.navigate(['/matches']);
+    // Navigate to stats — match is now locked, stats screen shows the final state
+    this.router.navigate(['/matches', id, 'stats']);
   }
 
   back(): void {

@@ -80,13 +80,13 @@ type Mode = 'signin' | 'signup' | 'magic';
           <!-- Primary action -->
           <button
             class="btn-primary submit-btn"
-            [disabled]="loading() || !canSubmit()"
+            [disabled]="loading() || !canSubmit"
             (click)="submit()"
           >
             @if (loading()) {
               <span class="spinner"></span>
             } @else {
-              {{ submitLabel() }}
+              {{ submitLabel }}
             }
           </button>
 
@@ -102,6 +102,17 @@ type Mode = 'signin' | 'signup' | 'magic';
           }
         }
       </div>
+
+      <!-- ── Offline bypass ───────────────────────────────────── -->
+      @if (!magicSent()) {
+        <div class="offline-section">
+          <div class="divider"><span>or</span></div>
+          <button class="offline-btn" (click)="continueOffline()">
+            Continue without account
+          </button>
+          <p class="offline-note">Data stays on this device only. You can sign in later.</p>
+        </div>
+      }
 
       <!-- ── Footer note ───────────────────────────────────────── -->
       @if (!magicSent()) {
@@ -298,6 +309,51 @@ type Mode = 'signin' | 'signup' | 'magic';
       color: var(--color-text-muted);
       line-height: var(--line-height-normal);
     }
+
+    /* ── Offline bypass ───────────────────────────────────────── */
+    .offline-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      width: 100%;
+      max-width: 360px;
+    }
+    .divider {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      color: var(--color-text-muted);
+      font-size: var(--font-size-sm);
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+    .offline-btn {
+      width: 100%;
+      max-width: 360px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .offline-btn:active {
+      background: var(--color-border-subtle);
+    }
+    .offline-note {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      text-align: center;
+    }
   `]
 })
 export class LoginComponent {
@@ -373,5 +429,10 @@ export class LoginComponent {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  continueOffline(): void {
+    localStorage.setItem('tennis-offline-mode', 'true');
+    this.router.navigate(['/matches']);
   }
 }

@@ -2,6 +2,7 @@ import { Component, signal, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { DatabaseService } from '../../core/services/database.service';
+import { OFFLINE_MODE_KEY } from '../../core/guards/auth.guard';
 
 @Component({
   selector: 'app-settings',
@@ -20,25 +21,47 @@ import { DatabaseService } from '../../core/services/database.service';
         <section class="settings-section">
           <h2 class="section-label">Account</h2>
 
-          <div class="settings-row">
-            <div class="row-avatar">{{ avatarLetter() }}</div>
-            <div class="row-info">
-              <span class="row-title">{{ email() }}</span>
-              <span class="row-sub">Signed in</span>
+          @if (isOfflineMode()) {
+            <!-- Offline / no-account mode -->
+            <div class="settings-row">
+              <span class="row-icon">📵</span>
+              <div class="row-info">
+                <span class="row-title">Offline Mode</span>
+                <span class="row-sub">Data stored on this device only</span>
+              </div>
             </div>
-          </div>
-
-          <button class="settings-row action-row danger-action" (click)="signOut()">
-            <span class="row-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </span>
-            <span class="row-title danger-text">Sign Out</span>
-          </button>
+            <button class="settings-row action-row" (click)="goToSignIn()">
+              <span class="row-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                  <polyline points="10 17 15 12 10 7"/>
+                  <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+              </span>
+              <span class="row-title" style="color: var(--color-primary)">Sign in to sync</span>
+            </button>
+          } @else {
+            <!-- Signed-in mode -->
+            <div class="settings-row">
+              <div class="row-avatar">{{ avatarLetter() }}</div>
+              <div class="row-info">
+                <span class="row-title">{{ email() }}</span>
+                <span class="row-sub">Signed in</span>
+              </div>
+            </div>
+            <button class="settings-row action-row danger-action" (click)="signOut()">
+              <span class="row-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </span>
+              <span class="row-title danger-text">Sign Out</span>
+            </button>
+          }
         </section>
 
         <!-- ── Appearance section ────────────────────────────────── -->
@@ -274,14 +297,14 @@ export class SettingsComponent implements OnInit {
   exporting    = signal(false);
   importing    = signal(false);
   importResult = signal<string | null>(null);
+  isOfflineMode = signal(false);
 
-  email       = () => this.auth.email ?? 'Unknown';
+  email        = () => this.auth.email ?? 'Unknown';
   avatarLetter = () => (this.auth.email?.[0] ?? '?').toUpperCase();
 
   ngOnInit(): void {
-    this.isDark.set(
-      document.documentElement.getAttribute('data-theme') === 'dark'
-    );
+    this.isDark.set(document.documentElement.getAttribute('data-theme') === 'dark');
+    this.isOfflineMode.set(localStorage.getItem(OFFLINE_MODE_KEY) === 'true');
   }
 
   // ── Theme ─────────────────────────────────────────────────────────────────
@@ -296,7 +319,13 @@ export class SettingsComponent implements OnInit {
   // ── Auth ──────────────────────────────────────────────────────────────────
 
   async signOut(): Promise<void> {
+    localStorage.removeItem(OFFLINE_MODE_KEY);
     await this.auth.signOut();
+    this.router.navigate(['/auth/login']);
+  }
+
+  goToSignIn(): void {
+    localStorage.removeItem(OFFLINE_MODE_KEY);
     this.router.navigate(['/auth/login']);
   }
 
