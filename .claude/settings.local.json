@@ -13,7 +13,9 @@
       "Bash(cmd /c \"dir /a C:\\\\Users\\\\Rames\\\\Documents\\\\GitHub\\\\TennisMatchTrack\")",
       "Bash(npx tsc:*)",
       "Bash(C:/Users/Rames/Documents/GitHub/TennisMatchTrack/node_modules/.bin/tsc --noEmit -p C:/Users/Rames/Documents/GitHub/TennisMatchTrack/tsconfig.app.json)",
-      "Bash(echo \"EXIT:$?\")"
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node_modules/.bin/ng build:*)",
+      "Bash(npx ng:*)"
     ]
   }
 }

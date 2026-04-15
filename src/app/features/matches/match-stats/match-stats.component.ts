@@ -140,9 +140,9 @@ function emptyMatchStats(): MatchStats {
             <section class="stat-section">
               <h3 class="section-title">Break Points</h3>
               <div class="stat-row labeled">
-                <span class="val left">{{ stats().p1.breakPoints?.breakPointsConverted }}/{{ stats().p1.breakPoints?.breakPointOpportunities }}</span>
+                <span class="val left">{{ stats().p1.breakPoints.breakPointsConverted }}/{{ stats().p1.breakPoints.breakPointOpportunities }}</span>
                 <span class="row-key">Converted</span>
-                <span class="val right">{{ stats().p2.breakPoints?.breakPointsConverted }}/{{ stats().p2.breakPoints?.breakPointOpportunities }}</span>
+                <span class="val right">{{ stats().p2.breakPoints.breakPointsConverted }}/{{ stats().p2.breakPoints.breakPointOpportunities }}</span>
               </div>
             </section>
 
@@ -185,15 +185,15 @@ function emptyMatchStats(): MatchStats {
 
                 <div class="shot-summary">
                   <div class="shot-bubble winners">
-                    <span class="bubble-val">{{ player.shots.winners ?? 0 }}</span>
+                    <span class="bubble-val">{{ player.shots.winners }}</span>
                     <span class="bubble-key">Winners</span>
                   </div>
                   <div class="shot-bubble ue">
-                    <span class="bubble-val">{{ player.shots.unforcedErrors ?? 0 }}</span>
+                    <span class="bubble-val">{{ player.shots.unforcedErrors }}</span>
                     <span class="bubble-key">Unforced</span>
                   </div>
                   <div class="shot-bubble fe">
-                    <span class="bubble-val">{{ player.shots.forcedErrors ?? 0 }}</span>
+                    <span class="bubble-val">{{ player.shots.forcedErrors }}</span>
                     <span class="bubble-key">Forced</span>
                   </div>
                 </div>
@@ -201,25 +201,25 @@ function emptyMatchStats(): MatchStats {
                 <!-- Winners by side -->
                 <div class="shot-row">
                   <span class="row-key">Winners by FH</span>
-                  <span class="row-val">{{ player.shots.winnersByFH ?? 0 }}</span>
+                  <span class="row-val">{{ player.shots.winnersByFH }}</span>
                 </div>
                 <div class="shot-row">
                   <span class="row-key">Winners by BH</span>
-                  <span class="row-val">{{ player.shots.winnersByBH ?? 0 }}</span>
+                  <span class="row-val">{{ player.shots.winnersByBH }}</span>
                 </div>
                 <div class="shot-row">
                   <span class="row-key">Winners by Serve</span>
-                  <span class="row-val">{{ player.shots.winnersByServe ?? 0 }}</span>
+                  <span class="row-val">{{ player.shots.winnersByServe }}</span>
                 </div>
 
                 <!-- UE by side -->
                 <div class="shot-row">
                   <span class="row-key">UE — Forehand</span>
-                  <span class="row-val err">{{ player.shots.ueBySide['FH'] ?? 0 }}</span>
+                  <span class="row-val err">{{ player.shots.ueBySide['FH'] }}</span>
                 </div>
                 <div class="shot-row">
                   <span class="row-key">UE — Backhand</span>
-                  <span class="row-val err">{{ player.shots.ueBySide['BH'] ?? 0 }}</span>
+                  <span class="row-val err">{{ player.shots.ueBySide['BH'] }}</span>
                 </div>
 
                 <!-- Top categories -->
