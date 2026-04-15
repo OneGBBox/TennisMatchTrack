@@ -2,7 +2,7 @@ import {
   Component, OnInit, OnDestroy, signal, computed, effect, inject
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { map } from 'rxjs';
+import { Subscription, map } from 'rxjs';
 
 import { DatabaseService } from '../../../core/services/database.service';
 import { TennisScoringService, RecordPointInput } from '../../../services/tennis-scoring.service';
@@ -536,6 +536,9 @@ export class ScoringComponent implements OnInit, OnDestroy {
     return !snap.isMatchComplete && idx === snap.setScores.length - 1;
   }
 
+  // ── Subscription ref for cleanup ─────────────────────────────────────────
+  private matchSub?: Subscription;
+
   // ── Persistence effect ────────────────────────────────────────────────────
   private persistEffect = effect(() => {
     const log    = this.scoring.pointsLog();
@@ -543,18 +546,21 @@ export class ScoringComponent implements OnInit, OnDestroy {
     const id     = this.matchId();
     if (!id || !this.matchLoaded()) return;
 
-    // Fire-and-forget persistence
-    this.db.getDb().then(db => {
-      db.matches.findOne(id).exec().then(doc => {
-        if (doc) {
-          doc.patch({
-            points_log: log,
-            status,
-            _modified: new Date().toISOString()
-          });
+    // Persist asynchronously — errors are logged but do not crash the UI
+    this.db.getDb()
+      .then(db => db.matches.findOne(id).exec())
+      .then(doc => {
+        if (!doc) {
+          console.warn('[Scoring] Cannot persist — match doc not found for id:', id);
+          return;
         }
-      });
-    });
+        return doc.patch({
+          points_log: log,
+          status,
+          _modified: new Date().toISOString()
+        });
+      })
+      .catch(err => console.error('[Scoring] Persist failed:', err));
   });
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -564,7 +570,7 @@ export class ScoringComponent implements OnInit, OnDestroy {
     this.matchId.set(id);
 
     const db = await this.db.getDb();
-    db.matches.findOne(id).$
+    this.matchSub = db.matches.findOne(id).$
       .pipe(map(doc => (doc ? (doc.toJSON() as Match) : null)))
       .subscribe(async match => {
         if (!match) return;
@@ -600,6 +606,7 @@ export class ScoringComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.matchSub?.unsubscribe();
     this.scoring.resetMatch();
   }
 

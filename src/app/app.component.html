@@ -2,5 +2,7 @@
   <main class="app-main">
     <router-outlet />
   </main>
-  <app-bottom-tab-bar />
+  @if (showTabBar()) {
+    <app-bottom-tab-bar />
+  }
 </div>

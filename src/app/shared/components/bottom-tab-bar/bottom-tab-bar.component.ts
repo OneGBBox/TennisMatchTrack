@@ -10,7 +10,9 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 export class BottomTabBarComponent {
   private readonly router = inject(Router);
 
-  get activeTab(): 'matches' | 'players' {
-    return this.router.url.startsWith('/players') ? 'players' : 'matches';
+  get activeTab(): 'matches' | 'players' | 'settings' {
+    if (this.router.url.startsWith('/players'))  return 'players';
+    if (this.router.url.startsWith('/settings')) return 'settings';
+    return 'matches';
   }
 }

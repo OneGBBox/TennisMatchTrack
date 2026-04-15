@@ -1,8 +1,8 @@
 import {
-  Component, OnInit, signal, computed, inject
+  Component, OnInit, OnDestroy, signal, computed, inject
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { map, combineLatest } from 'rxjs';
+import { Subscription, map, combineLatest } from 'rxjs';
 
 import { DatabaseService } from '../../../core/services/database.service';
 import { Player } from '../../../core/models/player.model';
@@ -214,18 +214,19 @@ interface PlayerRow {
     .empty-cta { margin-top: var(--space-4); width: 200px; border-radius: var(--radius-full); }
   `]
 })
-export class PlayerListComponent implements OnInit {
+export class PlayerListComponent implements OnInit, OnDestroy {
   private db     = inject(DatabaseService);
   private router = inject(Router);
 
   loading = signal(true);
+  private sub?: Subscription;
   private _rows = signal<PlayerRow[]>([]);
   rows = computed(() => this._rows());
 
   async ngOnInit(): Promise<void> {
     const db = await this.db.getDb();
 
-    combineLatest([
+    this.sub = combineLatest([
       db.players.find({ selector: { _deleted: { $ne: true } } }).sort({ name: 'asc' }).$,
       db.matches.find({ selector: { _deleted: { $ne: true }, status: { $in: ['complete'] } } }).$
     ]).pipe(
@@ -250,10 +251,17 @@ export class PlayerListComponent implements OnInit {
           return { player: p, wins, losses } as PlayerRow;
         });
       })
-    ).subscribe(rows => {
-      this._rows.set(rows);
-      this.loading.set(false);
+    ).subscribe({
+      next: rows => {
+        this._rows.set(rows);
+        this.loading.set(false);
+      },
+      error: err => console.error('[PlayerList] DB stream error:', err)
     });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
   newPlayer(): void {

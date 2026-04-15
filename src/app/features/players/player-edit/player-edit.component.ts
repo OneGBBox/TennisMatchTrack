@@ -29,9 +29,9 @@ const NTRP_VALUES = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5,
         <h1 class="nav-title">{{ isNew() ? 'New Player' : 'Edit Player' }}</h1>
         <button
           class="nav-save"
-          [disabled]="!canSave()"
+          [disabled]="!canSave"
           (click)="save()"
-        >Save</button>
+        >{{ saving() ? 'Saving…' : 'Save' }}</button>
       </header>
 
       <!-- ── Form ─────────────────────────────────────────────── -->
@@ -298,6 +298,7 @@ export class PlayerEditComponent implements OnInit {
   // ── State ─────────────────────────────────────────────────────────────────
   isNew      = signal(true);
   playerId   = signal('');
+  saving     = signal(false);
 
   name          = '';
   ntrpRating:   number | null = null;
@@ -307,7 +308,9 @@ export class PlayerEditComponent implements OnInit {
 
   readonly NTRP_VALUES = NTRP_VALUES;
 
-  canSave = computed(() => this.name.trim().length > 0);
+  /** Getter so Angular template re-evaluates on every change detection cycle.
+   *  Using computed() would fail here because `name` is a plain string, not a signal. */
+  get canSave(): boolean { return this.name.trim().length > 0 && !this.saving(); }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   async ngOnInit(): Promise<void> {
@@ -332,7 +335,13 @@ export class PlayerEditComponent implements OnInit {
 
   // ── Actions ───────────────────────────────────────────────────────────────
   async save(): Promise<void> {
-    if (!this.canSave()) return;
+    console.log('[PlayerEdit] save() called — canSave:', this.canSave, '| name:', JSON.stringify(this.name));
+    if (!this.canSave) {
+      console.warn('[PlayerEdit] save() blocked: canSave is false');
+      return;
+    }
+
+    this.saving.set(true);
 
     const data: any = {
       name:          this.name.trim(),
@@ -346,10 +355,21 @@ export class PlayerEditComponent implements OnInit {
       data['id'] = this.playerId();
     }
 
-    await this.db.upsertPlayer(data);
+    console.log('[PlayerEdit] Calling upsertPlayer with:', data);
+
+    try {
+      const doc = await this.db.upsertPlayer(data);
+      console.log('[PlayerEdit] upsertPlayer succeeded, doc id:', doc.id);
+    } catch (err) {
+      console.error('[PlayerEdit] upsertPlayer FAILED:', err);
+      this.saving.set(false);
+      alert('Save failed — check console for details.');
+      return;
+    }
 
     // Check if we should return somewhere specific
     const returnTo = this.route.snapshot.queryParamMap.get('returnTo');
+    console.log('[PlayerEdit] Navigating — returnTo:', returnTo ?? '/players');
     if (returnTo) {
       this.router.navigateByUrl(returnTo);
     } else {

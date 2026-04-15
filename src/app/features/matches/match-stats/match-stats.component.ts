@@ -151,19 +151,19 @@ function emptyMatchStats(): MatchStats {
               <h3 class="section-title">Rally Lengths</h3>
               <div class="rally-grid">
                 <div class="rally-bucket">
-                  <span class="bucket-val">{{ stats().p1.rally?.short }}</span>
+                  <span class="bucket-val">{{ stats().p1.rally.short }}</span>
                   <span class="bucket-key">Short (1–4)</span>
                 </div>
                 <div class="rally-bucket">
-                  <span class="bucket-val">{{ stats().p1.rally?.medium }}</span>
+                  <span class="bucket-val">{{ stats().p1.rally.medium }}</span>
                   <span class="bucket-key">Medium (5–8)</span>
                 </div>
                 <div class="rally-bucket">
-                  <span class="bucket-val">{{ stats().p1.rally?.long }}</span>
+                  <span class="bucket-val">{{ stats().p1.rally.long }}</span>
                   <span class="bucket-key">Long (9+)</span>
                 </div>
                 <div class="rally-bucket avg">
-                  <span class="bucket-val">{{ stats().p1.rally?.avg }}</span>
+                  <span class="bucket-val">{{ stats().p1.rally.avg }}</span>
                   <span class="bucket-key">Avg Rally</span>
                 </div>
               </div>
@@ -185,15 +185,15 @@ function emptyMatchStats(): MatchStats {
 
                 <div class="shot-summary">
                   <div class="shot-bubble winners">
-                    <span class="bubble-val">{{ player.shots?.winners ?? 0 }}</span>
+                    <span class="bubble-val">{{ player.shots.winners ?? 0 }}</span>
                     <span class="bubble-key">Winners</span>
                   </div>
                   <div class="shot-bubble ue">
-                    <span class="bubble-val">{{ player.shots?.unforcedErrors ?? 0 }}</span>
+                    <span class="bubble-val">{{ player.shots.unforcedErrors ?? 0 }}</span>
                     <span class="bubble-key">Unforced</span>
                   </div>
                   <div class="shot-bubble fe">
-                    <span class="bubble-val">{{ player.shots?.forcedErrors ?? 0 }}</span>
+                    <span class="bubble-val">{{ player.shots.forcedErrors ?? 0 }}</span>
                     <span class="bubble-key">Forced</span>
                   </div>
                 </div>
@@ -201,32 +201,32 @@ function emptyMatchStats(): MatchStats {
                 <!-- Winners by side -->
                 <div class="shot-row">
                   <span class="row-key">Winners by FH</span>
-                  <span class="row-val">{{ player.shots?.winnersByFH ?? 0 }}</span>
+                  <span class="row-val">{{ player.shots.winnersByFH ?? 0 }}</span>
                 </div>
                 <div class="shot-row">
                   <span class="row-key">Winners by BH</span>
-                  <span class="row-val">{{ player.shots?.winnersByBH ?? 0 }}</span>
+                  <span class="row-val">{{ player.shots.winnersByBH ?? 0 }}</span>
                 </div>
                 <div class="shot-row">
                   <span class="row-key">Winners by Serve</span>
-                  <span class="row-val">{{ player.shots?.winnersByServe ?? 0 }}</span>
+                  <span class="row-val">{{ player.shots.winnersByServe ?? 0 }}</span>
                 </div>
 
                 <!-- UE by side -->
                 <div class="shot-row">
                   <span class="row-key">UE — Forehand</span>
-                  <span class="row-val err">{{ player.shots?.ueBySide?.['FH'] ?? 0 }}</span>
+                  <span class="row-val err">{{ player.shots.ueBySide['FH'] ?? 0 }}</span>
                 </div>
                 <div class="shot-row">
                   <span class="row-key">UE — Backhand</span>
-                  <span class="row-val err">{{ player.shots?.ueBySide?.['BH'] ?? 0 }}</span>
+                  <span class="row-val err">{{ player.shots.ueBySide['BH'] ?? 0 }}</span>
                 </div>
 
                 <!-- Top categories -->
-                @if (topWinCategories(player.shots?.byCategoryWin ?? {}).length) {
+                @if (topWinCategories(player.shots.byCategoryWin).length) {
                   <div class="category-list">
                     <span class="cat-header">Top winner types</span>
-                    @for (c of topWinCategories(player.shots?.byCategoryWin ?? {}); track c.key) {
+                    @for (c of topWinCategories(player.shots.byCategoryWin); track c.key) {
                       <div class="cat-row">
                         <span class="cat-key">{{ c.key }}</span>
                         <span class="cat-val">{{ c.val }}</span>

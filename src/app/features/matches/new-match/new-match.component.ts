@@ -126,6 +126,21 @@ interface FormatOption {
 
           <div class="toggle-row">
             <div class="toggle-info">
+              <span class="toggle-label">Simple Scoring</span>
+              <span class="toggle-sub">Tap to score — no shot details required</span>
+            </div>
+            <button
+              class="toggle"
+              [class.on]="simpleScoring()"
+              (click)="toggleSimpleScoring()"
+              [attr.aria-pressed]="simpleScoring()"
+            >
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
               <span class="toggle-label">No-Advantage</span>
               <span class="toggle-sub">Deciding point at deuce</span>
             </div>
@@ -459,6 +474,7 @@ export class NewMatchComponent implements OnInit {
   format        = signal<MatchFormat>('best_of_3');
   noAd          = signal(false);
   finalSetTb    = signal(true);
+  simpleScoring = signal(true);   // default ON — easier for casual use
   initialServer = signal<string>('');
 
   locationCity = '';
@@ -505,8 +521,9 @@ export class NewMatchComponent implements OnInit {
   ];
 
   // ── Toggle helpers (arrow functions not allowed in Angular templates) ────
-  toggleNoAd(): void       { this.noAd.update(v => !v); }
-  toggleFinalSetTb(): void { this.finalSetTb.update(v => !v); }
+  toggleNoAd(): void          { this.noAd.update(v => !v); }
+  toggleFinalSetTb(): void    { this.finalSetTb.update(v => !v); }
+  toggleSimpleScoring(): void { this.simpleScoring.update(v => !v); }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   async ngOnInit(): Promise<void> {
@@ -521,22 +538,29 @@ export class NewMatchComponent implements OnInit {
     if (!this.canStart()) return;
 
     const matchId = uuidv4();
-    await this.db.upsertMatch({
-      id: matchId,
-      date: this.matchDate,
-      location_city: this.locationCity || undefined,
-      player1_id:    this.player1Id(),
-      player2_id:    this.player2Id(),
-      points_log:    [],
-      status:        'setup',
-      scoring_rules: {
-        format:               this.format(),
-        no_ad:                this.noAd(),
-        final_set_tiebreak:   this.finalSetTb(),
-        super_tiebreak_points: 10
-      },
-      // Store initial server in the first entry; scoring screen will read it
-    } as any);
+
+    try {
+      await this.db.upsertMatch({
+        id: matchId,
+        date: this.matchDate,
+        location_city: this.locationCity || undefined,
+        player1_id:    this.player1Id(),
+        player2_id:    this.player2Id(),
+        points_log:    [],
+        status:        'setup',
+        scoring_rules: {
+          format:                this.format(),
+          no_ad:                 this.noAd(),
+          final_set_tiebreak:    this.finalSetTb(),
+          super_tiebreak_points: 10,
+          simple_scoring:        this.simpleScoring()
+        }
+      } as any);
+    } catch (err) {
+      console.error('[NewMatch] Failed to save match:', err);
+      alert('Could not create match — see console for details.');
+      return;
+    }
 
     // Navigate to scoring screen, passing initial server as query param
     this.router.navigate(['/matches', matchId, 'score'], {

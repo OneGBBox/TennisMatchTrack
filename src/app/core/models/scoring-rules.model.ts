@@ -11,4 +11,6 @@ export interface ScoringRules {
   no_ad: boolean;
   final_set_tiebreak: boolean;
   super_tiebreak_points: number;
+  /** Simple mode: tap to score one point without the detail modal. */
+  simple_scoring?: boolean;
 }

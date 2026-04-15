@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, from, combineLatest, map, of } from 'rxjs';
+import { Subscription, switchMap, from, combineLatest, map, of } from 'rxjs';
 
 import { DatabaseService } from '../../../core/services/database.service';
 import { Match } from '../../../core/models/match.model';
@@ -211,11 +211,12 @@ interface MatchWithPlayers {
     }
   `]
 })
-export class MatchListComponent implements OnInit {
+export class MatchListComponent implements OnInit, OnDestroy {
   private db     = inject(DatabaseService);
   private router = inject(Router);
 
   loading = signal(true);
+  private sub?: Subscription;
 
   private readonly _rows = signal<MatchWithPlayers[]>([]);
 
@@ -228,7 +229,7 @@ export class MatchListComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     const db = await this.db.getDb();
 
-    combineLatest([
+    this.sub = combineLatest([
       db.matches.find({ selector: { _deleted: { $ne: true } } }).sort({ date: 'desc' }).$,
       db.players.find({ selector: { _deleted: { $ne: true } } }).$
     ]).pipe(
@@ -245,10 +246,17 @@ export class MatchListComponent implements OnInit {
           } as MatchWithPlayers;
         });
       })
-    ).subscribe(rows => {
-      this._rows.set(rows);
-      this.loading.set(false);
+    ).subscribe({
+      next: rows => {
+        this._rows.set(rows);
+        this.loading.set(false);
+      },
+      error: err => console.error('[MatchList] DB stream error:', err)
     });
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
   newMatch(): void {
