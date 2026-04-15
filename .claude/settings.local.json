@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ng new:*)",
+      "Bash(ng --version)",
+      "Bash(mv README.md README.md.bak)",
+      "Bash(mv README.md.bak README.md)",
+      "Bash(npm install:*)",
+      "Bash(npx cap:*)",
+      "Bash(node -e ':*)",
+      "Bash(node -e \"const rxdb = require\\('rxdb'\\); console.log\\(Object.keys\\(rxdb\\).filter\\(k => k.toLowerCase\\(\\).includes\\('create'\\) || k.toLowerCase\\(\\).includes\\('database'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(cmd /c \"dir C:\\\\Users\\\\Rames\\\\Documents\\\\GitHub\\\\TennisMatchTrack\")",
+      "Bash(cmd /c \"dir /a C:\\\\Users\\\\Rames\\\\Documents\\\\GitHub\\\\TennisMatchTrack\")",
+      "Bash(npx tsc:*)",
+      "Bash(C:/Users/Rames/Documents/GitHub/TennisMatchTrack/node_modules/.bin/tsc --noEmit -p C:/Users/Rames/Documents/GitHub/TennisMatchTrack/tsconfig.app.json)",
+      "Bash(echo \"EXIT:$?\")"
+    ]
+  }
+}
