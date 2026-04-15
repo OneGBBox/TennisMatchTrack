@@ -589,7 +589,8 @@ export class ScoringComponent implements OnInit, OnDestroy {
   locationCity  = signal<string | null>(null);
   serveNumber   = signal<1 | 2>(1);
   isSimpleMode  = signal(false);
-  matchDbStatus = signal<string>('in_progress');
+  /** Initialise to 'setup' so the UI starts locked until the DB record loads. */
+  matchDbStatus = signal<string>('setup');
 
   showModal       = signal(false);
   modalWinnerId   = signal('');
@@ -597,8 +598,14 @@ export class ScoringComponent implements OnInit, OnDestroy {
 
   // ── Computed ──────────────────────────────────────────────────────────────
 
-  /** True when no more scoring is allowed — match finished OR manually ended. */
+  /**
+   * True when no more scoring is allowed:
+   *  • scoring engine reached a natural match conclusion, OR
+   *  • DB status is 'complete' or 'abandoned' (manually ended), OR
+   *  • match hasn't loaded yet (prevents a flash of interactive UI)
+   */
   isLocked = computed(() =>
+    !this.matchLoaded() ||
     this.scoring.isMatchComplete() ||
     this.matchDbStatus() === 'complete' ||
     this.matchDbStatus() === 'abandoned'
@@ -632,7 +639,14 @@ export class ScoringComponent implements OnInit, OnDestroy {
     const log    = this.scoring.pointsLog();
     const status = this.scoring.matchStatus();
     const id     = this.matchId();
+
+    // Never run before the match is loaded
     if (!id || !this.matchLoaded()) return;
+
+    // Never overwrite an 'abandoned' or 'complete' DB status with the
+    // engine's in-memory status — End Match must be final.
+    const dbStatus = this.matchDbStatus();
+    if (dbStatus === 'abandoned' || dbStatus === 'complete') return;
 
     this.db.getDb()
       .then(db => db.matches.findOne(id).exec())

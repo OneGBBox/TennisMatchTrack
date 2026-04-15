@@ -35,6 +35,9 @@ import {
           @if (match().status === 'in_progress') {
             <span class="live-badge">LIVE</span>
           }
+          @if (match().status === 'abandoned') {
+            <span class="ended-badge">ENDED</span>
+          }
         </div>
       </header>
 
@@ -149,6 +152,15 @@ import {
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
+    }
+    .ended-badge {
+      background: rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.85);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      padding: 2px 6px;
+      border-radius: var(--radius-full);
     }
 
     /* ── Set labels row ──────────────────────────────────────── */
@@ -310,11 +322,10 @@ export class MatchTileComponent {
 
   open(): void {
     const m = this.match();
-    if (m.status === 'in_progress') {
-      this.router.navigate(['/matches', m.id, 'score']);
-    } else if (m.status === 'complete') {
+    if (m.status === 'complete' || m.status === 'abandoned') {
       this.router.navigate(['/matches', m.id, 'stats']);
     } else {
+      // 'in_progress' or 'setup' → go to scoring screen
       this.router.navigate(['/matches', m.id, 'score']);
     }
   }
