@@ -657,7 +657,7 @@ export class NewMatchComponent implements OnInit {
       } as any);
     } catch (err) {
       console.error('[NewMatch] Failed to save match:', err);
-      alert('Could not create match — see console for details.');
+      alert('Could not create match. Please try again.');
       return;
     }
 

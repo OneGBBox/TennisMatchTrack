@@ -65,7 +65,7 @@ export class DatabaseService {
         // 5-second guard against a stale/hung promise from a previous HMR cycle
         return await Promise.race([existing, rejectAfter(5000, 'CACHED_TIMEOUT')]);
       } catch (err: any) {
-        console.warn('[DB] Cached promise timed out or errored — hard-wiping and restarting.', err?.message);
+        console.warn('[DB] Cached promise timed out — wiping and restarting.', err?.message);
         clearWindowDbPromise();
         await safeWipe();
       }
@@ -82,8 +82,6 @@ export class DatabaseService {
   // ── Init pipeline ─────────────────────────────────────────────────────────
 
   private async initDatabase(): Promise<TennisDatabase> {
-    console.log('[DB] initDatabase() starting…');
-
     // ── Step 1: open the RxDB instance ──────────────────────────────────────
     let db: TennisDatabase;
     try {
@@ -95,7 +93,6 @@ export class DatabaseService {
         }),
         rejectAfter(8000, 'CREATE_DB_TIMEOUT')
       ]);
-      console.log('[DB] createRxDatabase OK');
     } catch (err: any) {
       console.warn('[DB] createRxDatabase failed — wiping and retrying.', err?.message);
       await safeWipe();
@@ -104,7 +101,6 @@ export class DatabaseService {
         storage: getRxStorageDexie(),
         closeDuplicates: true
       });
-      console.log('[DB] createRxDatabase OK (after wipe)');
     }
 
     // ── Step 2: add collections with autoMigrate:false ──────────────────────
@@ -118,14 +114,13 @@ export class DatabaseService {
         players: { schema: playerSchema, migrationStrategies: playerMigrationStrategies, autoMigrate: false },
         matches: { schema: matchSchema,  migrationStrategies: matchMigrationStrategies,  autoMigrate: false }
       });
-      console.log('[DB] addCollections OK');
     } catch (err: any) {
       await safeClose(db);
       const msg = String(err?.message ?? '');
       const code = String(err?.code ?? err?.rxdb ?? '');
       const isSchemaErr = ['DB6','DB8','DB9'].includes(code) || msg.includes('schema');
       if (isSchemaErr) {
-        console.warn('[DB] Schema mismatch on addCollections — wiping and restarting.', err);
+        console.warn('[DB] Schema mismatch — wiping and restarting.', err);
         await safeWipe();
         return this.initDatabase();
       }
@@ -137,17 +132,13 @@ export class DatabaseService {
     const matchesMigNeeded = await db.matches.migrationNeeded();
 
     if (playersMigNeeded || matchesMigNeeded) {
-      console.warn(
-        `[DB] Migration pending (players=${playersMigNeeded}, matches=${matchesMigNeeded}) ` +
-        `— wiping IndexedDB and starting fresh (pass-through migration = no data loss risk).`
-      );
+      console.warn(`[DB] Migration pending — wiping and starting fresh.`);
       await safeClose(db);
       await safeWipe();
       // Restart without any migration needed this time
       return this.initDatabase();
     }
 
-    console.log('[DB] Ready ✓ (players + matches, no migration pending)');
     return db;
   }
 
@@ -173,10 +164,7 @@ export class DatabaseService {
       _deleted: false,
       ...(this.auth.uid ? { creator_id: this.auth.uid } : {})
     };
-    console.log('[DB] players.upsert payload:', payload);
-    const doc = await db.players.upsert(payload);
-    console.log('[DB] players.upsert done, stored id:', doc.id);
-    return doc;
+    return db.players.upsert(payload);
   }
 
   async softDeletePlayer(id: string): Promise<void> {
@@ -218,34 +206,18 @@ export class DatabaseService {
   // ── DB smoke-test (insert → read → delete) ────────────────────────────────
 
   async testDb(): Promise<void> {
-    console.group('[DB Test] Starting smoke-test…');
     try {
       const db = await this.getDb();
-      console.log('[DB Test] ✓ getDb() resolved');
-
       const testId = '__smoke_test__';
       const inserted = await db.players.upsert({
         id: testId, name: 'Smoke Test Player',
         _modified: new Date().toISOString(), _deleted: false
       });
-      console.log('[DB Test] ✓ INSERT — id:', inserted.id, '| name:', inserted.name);
-
       const found = await db.players.findOne(testId).exec();
-      if (found) console.log('[DB Test] ✓ GET — id:', found.id, '| name:', found.name);
-      else        console.error('[DB Test] ✗ GET — doc not found after insert!');
-
-      const all = await db.players.find({ selector: { _deleted: { $ne: true } } }).exec();
-      console.log('[DB Test] ✓ FIND ALL — non-deleted count:', all.length);
-
       await found?.remove();
-      const gone = await db.players.findOne(testId).exec();
-      console.log('[DB Test] ✓ DELETE — doc gone:', gone === null);
-
-      console.log('[DB Test] 🎾 All operations PASSED');
     } catch (err) {
-      console.error('[DB Test] ✗ FAILED:', err);
+      console.error('[DB] Smoke-test failed:', err);
     }
-    console.groupEnd();
   }
 }
 
@@ -264,8 +236,7 @@ async function safeClose(db: TennisDatabase): Promise<void> {
 async function safeWipe(): Promise<void> {
   try {
     await removeRxDatabase(DB_NAME, getRxStorageDexie());
-    console.log('[DB] IndexedDB wiped.');
   } catch (e) {
-    console.warn('[DB] safeWipe failed (may already be gone):', e);
+    console.warn('[DB] safeWipe failed:', e);
   }
 }

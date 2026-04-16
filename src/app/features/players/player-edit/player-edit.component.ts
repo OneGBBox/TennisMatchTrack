@@ -380,11 +380,7 @@ export class PlayerEditComponent implements OnInit {
 
   // ── Actions ───────────────────────────────────────────────────────────────
   async save(): Promise<void> {
-    console.log('[PlayerEdit] save() called — canSave:', this.canSave, '| name:', JSON.stringify(this.name));
-    if (!this.canSave) {
-      console.warn('[PlayerEdit] save() blocked: canSave is false');
-      return;
-    }
+    if (!this.canSave) return;
 
     this.saving.set(true);
 
@@ -401,21 +397,16 @@ export class PlayerEditComponent implements OnInit {
       data['id'] = this.playerId();
     }
 
-    console.log('[PlayerEdit] Calling upsertPlayer with:', data);
-
     try {
-      const doc = await this.db.upsertPlayer(data);
-      console.log('[PlayerEdit] upsertPlayer succeeded, doc id:', doc.id);
+      await this.db.upsertPlayer(data);
     } catch (err) {
       console.error('[PlayerEdit] upsertPlayer FAILED:', err);
       this.saving.set(false);
-      alert('Save failed — check console for details.');
+      alert('Save failed. Please try again.');
       return;
     }
 
-    // Check if we should return somewhere specific
     const returnTo = this.route.snapshot.queryParamMap.get('returnTo');
-    console.log('[PlayerEdit] Navigating — returnTo:', returnTo ?? '/players');
     if (returnTo) {
       this.router.navigateByUrl(returnTo);
     } else {

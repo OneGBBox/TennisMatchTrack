@@ -651,10 +651,9 @@ export class ScoringComponent implements OnInit, OnDestroy {
     this.db.getDb()
       .then(db => db.matches.findOne(id).exec())
       .then(doc => {
-        if (!doc) { console.warn('[Scoring] Cannot persist — match not found:', id); return; }
         return doc.patch({ points_log: log, status, _modified: new Date().toISOString() });
       })
-      .catch(err => console.error('[Scoring] Persist failed:', err));
+      .catch(err => console.warn('[Scoring] Cannot persist point:', err));
   });
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────

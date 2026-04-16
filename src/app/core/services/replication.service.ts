@@ -23,7 +23,6 @@ export class ReplicationService implements OnDestroy {
     await this.auth.waitForInit();
 
     if (!this.auth.isAuthenticated()) {
-      console.log('[Sync] Skipped — user not authenticated.');
       return;
     }
 
@@ -64,7 +63,6 @@ export class ReplicationService implements OnDestroy {
       })
     );
 
-    console.log('[Sync] Started ✓');
   }
 
   async stopReplication(): Promise<void> {
@@ -81,7 +79,6 @@ export class ReplicationService implements OnDestroy {
       const { _rev, _attachments, _meta, ...clean } = doc;
       const { error } = await this.auth.client.from(table).upsert(clean);
       if (error) console.warn(`[Sync] Push ${table} failed:`, error.message);
-      else       console.log(`[Sync] ✓ Pushed to ${table}:`, clean['id']);
     } catch (e) {
       console.warn(`[Sync] Push ${table} exception:`, e);
     }
@@ -102,9 +99,8 @@ export class ReplicationService implements OnDestroy {
         .select('*')
         .eq('creator_id', uid);
 
-      if (pErr) {
-        console.warn('[Sync] Pull players error:', pErr.message);
-      } else if (players && players.length > 0) {
+      if (pErr) console.warn('[Sync] Pull players error:', pErr.message);
+      else if (players && players.length > 0) {
         await rxdb.players.bulkUpsert(
           players.map(p => ({
             ...p,
@@ -112,7 +108,6 @@ export class ReplicationService implements OnDestroy {
             _deleted:  p['_deleted']  ?? false
           }))
         );
-        console.log(`[Sync] Pulled ${players.length} player(s) from Supabase`);
       }
 
       // ── Matches ────────────────────────────────────────────────
@@ -121,9 +116,8 @@ export class ReplicationService implements OnDestroy {
         .select('*')
         .eq('creator_id', uid);
 
-      if (mErr) {
-        console.warn('[Sync] Pull matches error:', mErr.message);
-      } else if (matches && matches.length > 0) {
+      if (mErr) console.warn('[Sync] Pull matches error:', mErr.message);
+      else if (matches && matches.length > 0) {
         await rxdb.matches.bulkUpsert(
           matches.map(m => ({
             ...m,
@@ -132,7 +126,6 @@ export class ReplicationService implements OnDestroy {
             points_log: m['points_log'] ?? []
           }))
         );
-        console.log(`[Sync] Pulled ${matches.length} match(es) from Supabase`);
       }
 
     } catch (e) {
