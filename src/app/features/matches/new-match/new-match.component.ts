@@ -278,8 +278,9 @@ interface FormatOption {
       min-width: 44px;
       text-align: right;
       opacity: 1;
-      transition: opacity 0.15s;
+      transition: opacity 0.15s, transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1);
     }
+    .nav-start:not(:disabled):active { transform: scale(0.88); }
     .nav-start:disabled {
       opacity: 0.35;
       cursor: default;
@@ -293,7 +294,13 @@ interface FormatOption {
       border: 1px solid var(--color-border-subtle);
       padding: var(--space-4);
       margin-bottom: var(--space-4);
+      animation: tmCardIn 0.4s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
+    .form-section:nth-of-type(1) { animation-delay: 0.06s; }
+    .form-section:nth-of-type(2) { animation-delay: 0.12s; }
+    .form-section:nth-of-type(3) { animation-delay: 0.18s; }
+    .form-section:nth-of-type(4) { animation-delay: 0.24s; }
+    .form-section:nth-of-type(5) { animation-delay: 0.30s; }
     .section-label {
       font-size: var(--font-size-xs);
       font-weight: var(--font-weight-bold);

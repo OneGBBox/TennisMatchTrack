@@ -179,7 +179,12 @@ import { OFFLINE_MODE_KEY } from '../../core/guards/auth.guard';
       border: 1px solid var(--color-border-subtle);
       margin-bottom: var(--space-4);
       overflow: hidden;
+      animation: tmCardIn 0.42s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
+    .settings-section:nth-of-type(1) { animation-delay: 0.05s; }
+    .settings-section:nth-of-type(2) { animation-delay: 0.12s; }
+    .settings-section:nth-of-type(3) { animation-delay: 0.19s; }
+    .settings-section:nth-of-type(4) { animation-delay: 0.26s; }
     .section-label {
       font-size: var(--font-size-xs);
       font-weight: var(--font-weight-bold);
@@ -201,8 +206,8 @@ import { OFFLINE_MODE_KEY } from '../../core/guards/auth.guard';
       text-align: left;
       cursor: default;
     }
-    .action-row { cursor: pointer; }
-    .action-row:active { background: var(--color-border-subtle); }
+    .action-row { cursor: pointer; transition: transform 0.15s cubic-bezier(0.34,1.4,0.64,1); }
+    .action-row:active { background: var(--color-border-subtle); transform: scale(0.97); }
     .action-row:disabled,
     .action-row.disabled { opacity: 0.5; cursor: default; pointer-events: none; }
 

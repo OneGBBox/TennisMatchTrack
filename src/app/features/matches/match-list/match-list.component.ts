@@ -117,9 +117,12 @@ interface MatchWithPlayers {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.2s cubic-bezier(0.34,1.5,0.64,1);
     }
-    .nav-action:active { background: var(--color-primary-dark); }
+    .nav-action:active {
+      background: var(--color-primary-dark);
+      transform: scale(0.88) rotate(90deg);
+    }
 
     /* ── List content ─────────────────────────────────────────── */
     .list-content {
@@ -139,11 +142,18 @@ interface MatchWithPlayers {
       color: var(--color-text-muted);
       margin-bottom: var(--space-3);
       padding-left: 2px;
+      animation: tmFadeDown 0.3s ease both;
     }
     .section app-match-tile {
       display: block;
       margin-bottom: var(--space-3);
+      animation: tmCardIn 0.42s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
+    .section app-match-tile:nth-child(1)  { animation-delay: 0.05s; }
+    .section app-match-tile:nth-child(2)  { animation-delay: 0.11s; }
+    .section app-match-tile:nth-child(3)  { animation-delay: 0.17s; }
+    .section app-match-tile:nth-child(4)  { animation-delay: 0.22s; }
+    .section app-match-tile:nth-child(n+5){ animation-delay: 0.27s; }
 
     /* ── Skeleton ─────────────────────────────────────────────── */
     .skeleton-tile {
@@ -202,12 +212,14 @@ interface MatchWithPlayers {
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 16px rgba(0,122,255,0.40);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.18s cubic-bezier(0.34,1.5,0.64,1), box-shadow 0.15s ease;
       z-index: 100;
+      animation: tmHeartbeat 3s ease-in-out 2s infinite;
     }
     .fab:active {
-      transform: scale(0.92);
+      transform: scale(0.88) rotate(45deg);
       box-shadow: 0 2px 8px rgba(0,122,255,0.30);
+      animation: none;
     }
   `]
 })

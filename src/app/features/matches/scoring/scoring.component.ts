@@ -278,12 +278,11 @@ import { PointModalComponent } from './point-modal.component';
     .header-btn:disabled { opacity: 0.3; cursor: default; }
     .header-btn:not(:disabled):active { background: rgba(255,255,255,0.22); }
     .live-chip {
-      background: #FF3B30;
       color: #fff;
       font-size: 9px; font-weight: 800; letter-spacing: 0.8px;
       padding: 2px 7px;
       border-radius: var(--radius-full);
-      animation: pulse 1.5s infinite;
+      animation: tmLiveGlow 1.5s ease-in-out infinite;
     }
     .mode-chip {
       background: rgba(255,255,255,0.15);
@@ -292,7 +291,6 @@ import { PointModalComponent } from './point-modal.component';
       padding: 2px 7px;
       border-radius: var(--radius-full);
     }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
     .header-location { font-size: var(--font-size-sm); color: rgba(255,255,255,0.6); }
 
     /* ── Sets bar ─────────────────────────────────────────────── */
@@ -339,15 +337,16 @@ import { PointModalComponent } from './point-modal.component';
       background: rgba(255,255,255,0.06);
       padding: var(--space-6) var(--space-3);
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
+      transition: background 0.15s, transform 0.18s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.15s;
       -webkit-tap-highlight-color: transparent;
       position: relative;
       overflow: hidden;
       min-height: 280px;
     }
     .player-side:active {
-      background: rgba(255,255,255,0.14);
-      transform: scale(0.97);
+      background: rgba(255,255,255,0.18);
+      transform: scale(0.94);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.2);
     }
     .player-side.serving {
       background: rgba(0,122,255,0.15);
@@ -377,6 +376,7 @@ import { PointModalComponent } from './point-modal.component';
       line-height: 1;
       color: #fff;
       letter-spacing: -2px;
+      animation: tmPop 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) both;
     }
     .game-score.ad { font-size: 48px; color: var(--color-accent); }
 
@@ -461,15 +461,22 @@ import { PointModalComponent } from './point-modal.component';
       padding: var(--space-8) var(--space-6);
       padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + var(--space-8));
       text-align: center;
+      animation: tmPageUp 0.45s cubic-bezier(0.34, 1.15, 0.64, 1) both;
     }
 
-    .result-trophy { font-size: 64px; line-height: 1; }
+    .result-trophy {
+      font-size: 64px;
+      line-height: 1;
+      display: inline-block;
+      animation: tmTrophyDrop 0.7s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+    }
 
     .result-winner {
       font-size: var(--font-size-2xl);
       font-weight: 800;
       color: var(--color-accent);
       letter-spacing: -0.5px;
+      animation: tmCardIn 0.4s 0.15s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
 
     /* Final set score chips */
@@ -477,6 +484,7 @@ import { PointModalComponent } from './point-modal.component';
       display: flex;
       gap: var(--space-3);
       justify-content: center;
+      animation: tmCardIn 0.4s 0.25s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
     .result-set-chip {
       display: flex;
@@ -501,6 +509,7 @@ import { PointModalComponent } from './point-modal.component';
       align-items: center;
       gap: var(--space-5);
       justify-content: center;
+      animation: tmCardIn 0.4s 0.35s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
     .result-player {
       display: flex;
@@ -521,6 +530,8 @@ import { PointModalComponent } from './point-modal.component';
       top: -18px;
       font-size: 20px;
       line-height: 1;
+      display: inline-block;
+      animation: tmCrownBounce 1.4s ease-in-out 0.6s infinite;
     }
     .result-vs {
       font-size: var(--font-size-sm);
@@ -543,10 +554,11 @@ import { PointModalComponent } from './point-modal.component';
       font-weight: var(--font-weight-bold);
       border-radius: var(--radius-full);
       box-shadow: 0 4px 16px rgba(0,122,255,0.4);
-      transition: transform 0.1s, box-shadow 0.1s;
+      transition: transform 0.18s cubic-bezier(0.34,1.5,0.64,1), box-shadow 0.15s;
+      animation: tmCardIn 0.4s 0.5s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
     .stats-btn:active {
-      transform: scale(0.97);
+      transform: scale(0.94);
       box-shadow: 0 2px 8px rgba(0,122,255,0.3);
     }
 
@@ -651,6 +663,7 @@ export class ScoringComponent implements OnInit, OnDestroy {
     this.db.getDb()
       .then(db => db.matches.findOne(id).exec())
       .then(doc => {
+        if (!doc) return;
         return doc.patch({ points_log: log, status, _modified: new Date().toISOString() });
       })
       .catch(err => console.warn('[Scoring] Cannot persist point:', err));

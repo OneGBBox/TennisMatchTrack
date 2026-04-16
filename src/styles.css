@@ -198,4 +198,104 @@ button:focus-visible {
   overflow-y: auto;
   padding: var(--space-4);
   padding-bottom: calc(var(--tab-bar-height) + var(--safe-bottom) + var(--space-4));
+  animation: tmPageUp 0.38s cubic-bezier(0.34, 1.15, 0.64, 1) both;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Global Animations — cheerful & bouncy 🎾
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Page slides up on every navigation */
+@keyframes tmPageUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Card / list-item bounces in from below */
+@keyframes tmCardIn {
+  0%   { opacity: 0; transform: translateY(30px) scale(0.93); }
+  55%  { opacity: 1; transform: translateY(-6px) scale(1.02); }
+  78%  { transform: translateY(2px)  scale(0.99); }
+  100% { transform: translateY(0)    scale(1); }
+}
+
+/* Score / badge quick pop */
+@keyframes tmPop {
+  0%   { transform: scale(0.55); opacity: 0; }
+  65%  { transform: scale(1.2); }
+  85%  { transform: scale(0.94); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Gentle float — empty-state emoji, trophy */
+@keyframes tmFloat {
+  0%, 100% { transform: translateY(0px)   rotate(-3deg); }
+  50%       { transform: translateY(-14px) rotate(3deg);  }
+}
+
+/* Winner crown infinite bounce */
+@keyframes tmCrownBounce {
+  0%,100% { transform: translateY(0)   scale(1);    }
+  25%      { transform: translateY(-9px) scale(1.22); }
+  55%      { transform: translateY(-4px) scale(1.1);  }
+  75%      { transform: translateY(-7px) scale(1.15); }
+}
+
+/* FAB soft heartbeat */
+@keyframes tmHeartbeat {
+  0%, 100% { transform: scale(1);    }
+  14%       { transform: scale(1.09); }
+  28%       { transform: scale(1);    }
+  42%       { transform: scale(1.06); }
+  70%       { transform: scale(1);    }
+}
+
+/* Nav + button spins 90° on press */
+@keyframes tmSpin90 {
+  from { transform: rotate(0deg);  }
+  to   { transform: rotate(90deg); }
+}
+
+/* Tab-icon spring bounce when a tab becomes active */
+@keyframes tmTabBounce {
+  0%   { transform: translateY(0)   scale(1);    }
+  30%  { transform: translateY(-7px) scale(1.18); }
+  55%  { transform: translateY(2px)  scale(0.94); }
+  78%  { transform: translateY(-2px) scale(1.03); }
+  100% { transform: translateY(0)   scale(1);    }
+}
+
+/* Live-badge glow pulse (red halo) */
+@keyframes tmLiveGlow {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(255,59,48,0.55); background: #FF3B30; }
+  50%       { box-shadow: 0 0 0 8px rgba(255,59,48,0);    background: #ff6359; }
+}
+
+/* Result-screen trophy entrance drop */
+@keyframes tmTrophyDrop {
+  0%   { transform: translateY(-40px) scale(0.6) rotate(-15deg); opacity: 0; }
+  60%  { transform: translateY(6px)   scale(1.15) rotate(5deg);  opacity: 1; }
+  80%  { transform: translateY(-3px)  scale(0.97) rotate(-2deg); }
+  100% { transform: translateY(0)     scale(1)    rotate(0deg);  }
+}
+
+/* Staggered section-header fade down */
+@keyframes tmFadeDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Empty-state icon floats ──────────────────────────────── */
+.empty-icon {
+  display: inline-block;
+  animation: tmFloat 3.2s ease-in-out infinite;
+}
+
+/* ── Reduced-motion: honour system preference ─────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:       0.01ms !important;
+    animation-iteration-count: 1    !important;
+    transition-duration:       0.01ms !important;
+  }
 }

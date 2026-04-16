@@ -140,18 +140,13 @@ import {
       font-size: var(--font-size-xs);
     }
     .live-badge {
-      background: #FF3B30;
       color: #fff;
       font-size: 9px;
       font-weight: 800;
       letter-spacing: 0.8px;
       padding: 2px 6px;
       border-radius: var(--radius-full);
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
+      animation: tmLiveGlow 1.5s ease-in-out infinite;
     }
     .ended-badge {
       background: rgba(255,255,255,0.2);

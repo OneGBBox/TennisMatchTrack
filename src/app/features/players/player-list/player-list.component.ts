@@ -128,11 +128,18 @@ interface PlayerRow {
       box-shadow: var(--shadow-sm);
       padding: var(--space-3) var(--space-4);
       cursor: pointer;
-      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      transition: transform 0.18s cubic-bezier(0.34,1.3,0.64,1), box-shadow 0.15s ease;
       -webkit-tap-highlight-color: transparent;
+      animation: tmCardIn 0.42s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
+    .player-card:nth-child(1)  { animation-delay: 0.04s; }
+    .player-card:nth-child(2)  { animation-delay: 0.09s; }
+    .player-card:nth-child(3)  { animation-delay: 0.14s; }
+    .player-card:nth-child(4)  { animation-delay: 0.19s; }
+    .player-card:nth-child(5)  { animation-delay: 0.24s; }
+    .player-card:nth-child(n+6){ animation-delay: 0.28s; }
     .player-card:active {
-      transform: scale(0.985);
+      transform: scale(0.97);
       box-shadow: none;
     }
 
