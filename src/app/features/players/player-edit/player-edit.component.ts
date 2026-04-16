@@ -39,8 +39,15 @@ const NTRP_VALUES = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5,
 
         <!-- Avatar preview -->
         <div class="avatar-section">
-          <app-avatar [name]="name || 'P'" [size]="80" />
-          <p class="avatar-hint">Avatar is auto-generated from name</p>
+          <div class="avatar-wrapper">
+            <app-avatar [name]="name || 'P'" [imageUrl]="imageUrl || undefined" [size]="88" />
+            @if (imageUrl) {
+              <button class="avatar-clear" (click)="imageUrl = ''" aria-label="Remove photo">✕</button>
+            }
+          </div>
+          <p class="avatar-hint">
+            {{ imageUrl ? 'Photo from URL' : 'Auto-generated from name' }}
+          </p>
         </div>
 
         <!-- Basic info section -->
@@ -56,6 +63,18 @@ const NTRP_VALUES = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5,
               placeholder="Full name"
               autocomplete="name"
             />
+          </label>
+
+          <label class="field-label">
+            Photo URL
+            <input
+              class="field-input"
+              type="url"
+              [(ngModel)]="imageUrl"
+              placeholder="https://example.com/photo.jpg"
+              autocomplete="off"
+            />
+            <span class="field-hint">Paste any public image URL — shown as your avatar</span>
           </label>
         </section>
 
@@ -184,9 +203,33 @@ const NTRP_VALUES = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5,
       gap: var(--space-2);
       padding: var(--space-6) 0 var(--space-4);
     }
+    .avatar-wrapper {
+      position: relative;
+      display: inline-flex;
+    }
+    .avatar-clear {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #FF3B30;
+      color: #fff;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
     .avatar-hint {
       font-size: var(--font-size-xs);
       color: var(--color-text-muted);
+    }
+    .field-hint {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      margin-top: -var(--space-1);
     }
 
     /* ── Fields ───────────────────────────────────────────────── */
@@ -301,6 +344,7 @@ export class PlayerEditComponent implements OnInit {
   saving     = signal(false);
 
   name          = '';
+  imageUrl      = '';
   ntrpRating:   number | null = null;
   utrRating:    number | null = null;
   hittingArm:   HittingArm | null = null;
@@ -323,11 +367,12 @@ export class PlayerEditComponent implements OnInit {
       const db  = await this.db.getDb();
       const doc = await db.players.findOne(id).exec();
       if (doc) {
-        const p         = doc.toJSON() as Player;
-        this.name        = p.name;
-        this.ntrpRating  = p.ntrp_rating ?? null;
-        this.utrRating   = p.utr_rating  ?? null;
-        this.hittingArm  = p.hitting_arm ?? null;
+        const p           = doc.toJSON() as Player;
+        this.name         = p.name;
+        this.imageUrl     = p.image_url     ?? '';
+        this.ntrpRating   = p.ntrp_rating   ?? null;
+        this.utrRating    = p.utr_rating    ?? null;
+        this.hittingArm   = p.hitting_arm   ?? null;
         this.backhandType = p.backhand_type ?? null;
       }
     }
@@ -345,6 +390,7 @@ export class PlayerEditComponent implements OnInit {
 
     const data: any = {
       name:          this.name.trim(),
+      image_url:     this.imageUrl.trim() || undefined,
       ntrp_rating:   this.ntrpRating  ?? undefined,
       utr_rating:    this.utrRating   ?? undefined,
       hitting_arm:   this.hittingArm  ?? undefined,

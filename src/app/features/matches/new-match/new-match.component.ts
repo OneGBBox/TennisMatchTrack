@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { map } from 'rxjs';
 
 import { DatabaseService } from '../../../core/services/database.service';
+import { WeatherService, WeatherResult } from '../../../core/services/weather.service';
 import { Player } from '../../../core/models/player.model';
 import { MatchFormat } from '../../../core/models/scoring-rules.model';
 import { AvatarComponent } from '../../../shared/components/avatar/avatar.component';
@@ -205,13 +206,33 @@ interface FormatOption {
 
           <label class="field-label">
             City / Location
-            <input
-              class="field-input"
-              type="text"
-              [(ngModel)]="locationCity"
-              placeholder="e.g. New York"
-            />
+            <div class="city-row">
+              <input
+                class="field-input city-input"
+                type="text"
+                [(ngModel)]="locationCity"
+                placeholder="e.g. New York"
+                (blur)="onCityBlur()"
+              />
+              @if (weatherLoading()) {
+                <span class="weather-spinner"></span>
+              }
+            </div>
           </label>
+
+          <!-- Weather preview chip -->
+          @if (weatherResult()) {
+            <div class="weather-preview">
+              <span class="w-icon">{{ weatherIcon() }}</span>
+              <span class="w-city">{{ weatherResult()!.cityName }}</span>
+              <span class="w-temp">{{ weatherResult()!.weather.temp_c }}°C</span>
+              <span class="w-cond">{{ weatherResult()!.weather.condition }}</span>
+              <span class="w-wind">💨 {{ weatherResult()!.weather.wind_kph }} km/h</span>
+            </div>
+          }
+          @if (weatherError()) {
+            <p class="weather-error">{{ weatherError() }}</p>
+          }
 
           <label class="field-label">
             Date
@@ -461,11 +482,54 @@ interface FormatOption {
       transition: border-color 0.15s;
     }
     .field-input:focus { border-color: var(--color-primary); }
+
+    /* ── City + weather ───────────────────────────────────────── */
+    .city-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .city-input { flex: 1; }
+    .weather-spinner {
+      position: absolute;
+      right: var(--space-3);
+      width: 16px; height: 16px;
+      border: 2px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .weather-preview {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: rgba(0,122,255,0.07);
+      border: 1px solid rgba(0,122,255,0.2);
+      border-radius: var(--radius-md);
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--font-size-sm);
+      flex-wrap: wrap;
+    }
+    .w-icon  { font-size: 18px; line-height: 1; }
+    .w-city  { font-weight: var(--font-weight-bold); color: var(--color-text-primary); }
+    .w-temp  { color: var(--color-primary); font-weight: var(--font-weight-bold); }
+    .w-cond  { color: var(--color-text-secondary); }
+    .w-wind  { color: var(--color-text-muted); margin-left: auto; }
+
+    .weather-error {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      padding: var(--space-1) var(--space-1);
+    }
   `]
 })
 export class NewMatchComponent implements OnInit {
-  private db     = inject(DatabaseService);
-  private router = inject(Router);
+  private db      = inject(DatabaseService);
+  private router  = inject(Router);
+  private weather = inject(WeatherService);
 
   // ── State ────────────────────────────────────────────────────────────────
   players       = signal<Player[]>([]);
@@ -477,8 +541,18 @@ export class NewMatchComponent implements OnInit {
   simpleScoring = signal(true);   // default ON — easier for casual use
   initialServer = signal<string>('');
 
-  locationCity = '';
-  matchDate    = new Date().toISOString().split('T')[0];
+  locationCity   = '';
+  matchDate      = new Date().toISOString().split('T')[0];
+
+  // ── Weather ───────────────────────────────────────────────────────────────
+  weatherLoading = signal(false);
+  weatherResult  = signal<WeatherResult | null>(null);
+  weatherError   = signal('');
+
+  weatherIcon = () => {
+    const r = this.weatherResult();
+    return r ? WeatherService.icon(r.weather.condition) : '';
+  };
 
   // NgModel bridges (two-way bind into signals)
   get p1IdModel(): string { return this.player1Id(); }
@@ -525,6 +599,29 @@ export class NewMatchComponent implements OnInit {
   toggleFinalSetTb(): void    { this.finalSetTb.update(v => !v); }
   toggleSimpleScoring(): void { this.simpleScoring.update(v => !v); }
 
+  async onCityBlur(): Promise<void> {
+    const city = this.locationCity.trim();
+    // Clear previous result if city was cleared
+    if (!city) { this.weatherResult.set(null); this.weatherError.set(''); return; }
+    // Skip if result already matches current city
+    if (this.weatherResult()?.cityName.toLowerCase() === city.toLowerCase()) return;
+
+    this.weatherLoading.set(true);
+    this.weatherError.set('');
+    this.weatherResult.set(null);
+
+    const result = await this.weather.fetchForCity(city);
+
+    if (result) {
+      this.weatherResult.set(result);
+      // Update the city field to the geocoder-resolved name
+      this.locationCity = result.cityName;
+    } else {
+      this.weatherError.set('Could not fetch weather — city not found or offline.');
+    }
+    this.weatherLoading.set(false);
+  }
+
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   async ngOnInit(): Promise<void> {
     const db = await this.db.getDb();
@@ -540,10 +637,12 @@ export class NewMatchComponent implements OnInit {
     const matchId = uuidv4();
 
     try {
+      const wx = this.weatherResult();
       await this.db.upsertMatch({
         id: matchId,
         date: this.matchDate,
         location_city: this.locationCity || undefined,
+        weather:       wx ? wx.weather : undefined,
         player1_id:    this.player1Id(),
         player2_id:    this.player2Id(),
         points_log:    [],

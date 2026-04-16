@@ -3,5 +3,5 @@
 export const environment = {
   production: true,
   supabaseUrl: 'https://ajqwasrgxmaloqkifakw.supabase.co',        // e.g. https://xxxxxxxxxxxx.supabase.co
-  supabaseAnonKey: 'sb_publishable_o8880qUaG-5UPKvV6Hn8pg_NCvU85HC' // anon/public key (safe to use client-side)
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqcXdhc3JneG1hbG9xa2lmYWt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDU0OTQsImV4cCI6MjA5MTcyMTQ5NH0.dWoMawOw_VzFNMwZp9f70aDdlRaDKS3cYPM71DVzAWo' // anon/public key (safe to use client-side)
 };
