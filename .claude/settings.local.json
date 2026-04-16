@@ -7,7 +7,20 @@
       "Bash(mv README.md.bak README.md)",
       "Bash(npm install:*)",
       "Bash(npx cap:*)",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(node -e \"const rxdb = require\\('rxdb'\\); console.log\\(Object.keys\\(rxdb\\).filter\\(k => k.toLowerCase\\(\\).includes\\('create'\\) || k.toLowerCase\\(\\).includes\\('database'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(cmd /c \"dir C:\\\\Users\\\\Rames\\\\Documents\\\\GitHub\\\\TennisMatchTrack\")",
+      "Bash(cmd /c \"dir /a C:\\\\Users\\\\Rames\\\\Documents\\\\GitHub\\\\TennisMatchTrack\")",
+      "Bash(npx tsc:*)",
+      "Bash(C:/Users/Rames/Documents/GitHub/TennisMatchTrack/node_modules/.bin/tsc --noEmit -p C:/Users/Rames/Documents/GitHub/TennisMatchTrack/tsconfig.app.json)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node_modules/.bin/ng build:*)",
+      "Bash(npx ng:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(node -e \"const p = require\\('./node_modules/@supabase/supabase-js/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://ajqwasrgxmaloqkifakw.supabase.co/rest/v1/\" -H \"apikey: sb_publishable_i6PHITZUdkpoW15FyeyOog_xiipJJ7B\" -H \"Authorization: Bearer sb_publishable_i6PHITZUdkpoW15FyeyOog_xiipJJ7B\")",
+      "Bash(curl -s \"https://ajqwasrgxmaloqkifakw.supabase.co/auth/v1/health\" -H \"apikey: sb_publishable_i6PHITZUdkpoW15FyeyOog_xiipJJ7B\")",
+      "Bash(curl -s -o /dev/null -w \"REST status: %{http_code}\" \"https://ajqwasrgxmaloqkifakw.supabase.co/rest/v1/players?limit=1\" -H \"apikey: sb_publishable_i6PHITZUdkpoW15FyeyOog_xiipJJ7B\" -H \"Authorization: Bearer sb_publishable_i6PHITZUdkpoW15FyeyOog_xiipJJ7B\")"
     ]
   }
 }
