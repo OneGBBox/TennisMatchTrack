@@ -174,7 +174,9 @@ const NTRP_VALUES = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5,
       font-weight: var(--font-weight-bold);
       min-width: 44px;
       text-align: right;
+      transition: transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1);
     }
+    .nav-save:not(:disabled):active { transform: scale(0.88); }
     .nav-save:disabled { opacity: 0.35; cursor: default; }
 
     /* ── Form ─────────────────────────────────────────────────── */
@@ -185,7 +187,12 @@ const NTRP_VALUES = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5,
       border: 1px solid var(--color-border-subtle);
       padding: var(--space-4);
       margin-bottom: var(--space-4);
+      animation: tmCardIn 0.4s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
+    .form-section:nth-of-type(1) { animation-delay: 0.10s; }
+    .form-section:nth-of-type(2) { animation-delay: 0.16s; }
+    .form-section:nth-of-type(3) { animation-delay: 0.22s; }
+    .form-section:nth-of-type(4) { animation-delay: 0.28s; }
     .section-label {
       font-size: var(--font-size-xs);
       font-weight: var(--font-weight-bold);
@@ -202,11 +209,14 @@ const NTRP_VALUES = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5,
       align-items: center;
       gap: var(--space-2);
       padding: var(--space-6) 0 var(--space-4);
+      animation: tmTrophyDrop 0.55s cubic-bezier(0.34, 1.3, 0.64, 1) both;
     }
     .avatar-wrapper {
       position: relative;
       display: inline-flex;
+      transition: transform 0.2s cubic-bezier(0.34, 1.5, 0.64, 1);
     }
+    .avatar-wrapper:active { transform: scale(0.92); }
     .avatar-clear {
       position: absolute;
       top: -4px;
@@ -380,11 +390,7 @@ export class PlayerEditComponent implements OnInit {
 
   // ── Actions ───────────────────────────────────────────────────────────────
   async save(): Promise<void> {
-    console.log('[PlayerEdit] save() called — canSave:', this.canSave, '| name:', JSON.stringify(this.name));
-    if (!this.canSave) {
-      console.warn('[PlayerEdit] save() blocked: canSave is false');
-      return;
-    }
+    if (!this.canSave) return;
 
     this.saving.set(true);
 
@@ -401,21 +407,16 @@ export class PlayerEditComponent implements OnInit {
       data['id'] = this.playerId();
     }
 
-    console.log('[PlayerEdit] Calling upsertPlayer with:', data);
-
     try {
-      const doc = await this.db.upsertPlayer(data);
-      console.log('[PlayerEdit] upsertPlayer succeeded, doc id:', doc.id);
+      await this.db.upsertPlayer(data);
     } catch (err) {
       console.error('[PlayerEdit] upsertPlayer FAILED:', err);
       this.saving.set(false);
-      alert('Save failed — check console for details.');
+      alert('Save failed. Please try again.');
       return;
     }
 
-    // Check if we should return somewhere specific
     const returnTo = this.route.snapshot.queryParamMap.get('returnTo');
-    console.log('[PlayerEdit] Navigating — returnTo:', returnTo ?? '/players');
     if (returnTo) {
       this.router.navigateByUrl(returnTo);
     } else {

@@ -24,9 +24,7 @@ export class AppComponent implements OnInit {
     // Re-start sync whenever the user signs in; stop it when they sign out
     effect(() => {
       if (this.auth.isAuthenticated()) {
-        this.replication.startReplication().catch(err =>
-          console.warn('[App] Sync start failed:', err)
-        );
+        this.replication.startReplication().catch(err => console.warn('[App] startReplication failed:', err));
       } else if (!this.auth.isLoading()) {
         this.replication.stopReplication();
       }
@@ -57,8 +55,6 @@ export class AppComponent implements OnInit {
     this.dbService.testDb();
 
     // Kick off background sync — non-blocking, safe to fail offline
-    this.replication.init().catch(err =>
-      console.warn('[App] Replication init failed (offline?):', err)
-    );
+    this.replication.init().catch(err => console.warn('[App] Replication init failed:', err));
   }
 }
